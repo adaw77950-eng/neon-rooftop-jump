@@ -10,6 +10,8 @@
 python -m http.server 4173 --directory dist
 ```
 
+也可以直接双击 `neon-rooftop-jump-offline.html`，无需联网或启动服务器。
+
 ## 测试
 
 ```powershell

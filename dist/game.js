@@ -1,5 +1,6 @@
 import {
   MAX_CHARGE_MS,
+  ballisticPoint,
   chargeRatio,
   classifyLanding,
   jumpFromCharge,
@@ -63,7 +64,11 @@ function loadSave() {
 }
 
 function persist(extra = {}) {
-  localStorage.setItem(SAVE_KEY, JSON.stringify({ best, muted, played: true, ...extra }));
+  try {
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ best, muted, played: true, ...extra }));
+  } catch {
+    // 部分手机浏览器会限制 file:// 页面的本地存储；不影响离线游玩。
+  }
 }
 
 function resetGame() {
@@ -154,9 +159,9 @@ function update(dt, now) {
       }
     } else if (action === 'jumping' && jump) {
       const t = Math.min(1, (now - jump.startedAt) / jump.duration);
-      const eased = t * t * (3 - 2 * t);
-      player.x = lerp(jump.startX, jump.endX, eased);
-      player.y = lerp(jump.startY, jump.endY, eased) - Math.sin(Math.PI * t) * jump.height;
+      const point = ballisticPoint(jump, t);
+      player.x = point.x;
+      player.y = point.y;
       player.trail.push({ x: player.x, y: player.y - 10, life: 1 });
       if (player.trail.length > 14) player.trail.shift();
       if (t >= 1) resolveLanding();

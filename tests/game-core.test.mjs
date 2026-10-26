@@ -2,12 +2,31 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import {
+  ballisticPoint,
   chargeRatio,
   classifyLanding,
   difficultyAt,
   jumpFromCharge,
   makeNextPlatform,
 } from '../dist/game-core.js';
+
+test('ballisticPoint uses constant horizontal speed and a parabolic arc', () => {
+  const jump = { startX: 10, startY: 200, endX: 110, endY: 220, height: 80 };
+  const start = ballisticPoint(jump, 0);
+  const quarter = ballisticPoint(jump, 0.25);
+  const middle = ballisticPoint(jump, 0.5);
+  const threeQuarter = ballisticPoint(jump, 0.75);
+  const end = ballisticPoint(jump, 1);
+
+  assert.deepEqual(start, { x: 10, y: 200 });
+  assert.deepEqual(end, { x: 110, y: 220 });
+  assert.equal(quarter.x - start.x, middle.x - quarter.x);
+  assert.equal(threeQuarter.x - middle.x, end.x - threeQuarter.x);
+  assert.ok(middle.y < quarter.y && middle.y < threeQuarter.y);
+
+  const ySecondDifference = quarter.y - 2 * middle.y + threeQuarter.y;
+  assert.ok(ySecondDifference > 0, 'vertical acceleration should point downward');
+});
 
 test('chargeRatio clamps time into the playable range', () => {
   assert.equal(chargeRatio(-50), 0);

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "test": "node --test",
-    "check": "node --check dist/game.js && node --check dist/game-core.js"
+    "check": "node --check dist/game.js && node --check dist/game-core.js",
+    "build:offline": "node build-offline.mjs"
   }
 }

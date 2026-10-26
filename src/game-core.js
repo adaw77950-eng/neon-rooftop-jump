@@ -22,6 +22,14 @@ export function jumpFromCharge(ratio) {
   };
 }
 
+export function ballisticPoint(jump, progress) {
+  const t = clamp(progress, 0, 1);
+  const x = jump.startX + (jump.endX - jump.startX) * t;
+  const baselineY = jump.startY + (jump.endY - jump.startY) * t;
+  const y = baselineY - 4 * jump.height * t * (1 - t);
+  return { x, y };
+}
+
 export function classifyLanding(playerCenterX, platform) {
   const left = platform.x;
   const right = platform.x + platform.width;
