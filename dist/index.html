@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no" />
+    <meta name="theme-color" content="#090a1a" />
+    <title>霓虹跃迁｜像素屋顶跳跃</title>
+    <meta name="description" content="按住蓄力，松开跃过霓虹屋顶。原创像素风浏览器小游戏。" />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="game-shell" aria-label="霓虹跃迁像素跳跃游戏">
+      <header class="brand-bar">
+        <div class="brand-lockup">
+          <span class="brand-kicker">NIGHT COURIER / 01</span>
+          <strong>霓虹跃迁</strong>
+        </div>
+        <button id="muteButton" class="pixel-button icon-button" type="button" aria-label="切换声音">声音 ON</button>
+      </header>
+
+      <section class="screen-frame">
+        <canvas id="gameCanvas" width="480" height="720" aria-label="游戏画面"></canvas>
+        <div class="scanlines" aria-hidden="true"></div>
+
+        <section id="startPanel" class="panel start-panel">
+          <p class="eyebrow">ROOFTOP DELIVERY PROTOCOL</p>
+          <h1>霓虹<br /><span>跃迁</span></h1>
+          <p class="lede">城市断电前，把最后一枚数据芯片送到天际线尽头。</p>
+          <button id="startButton" class="pixel-button primary" type="button">开始跑酷</button>
+          <p class="control-copy"><b>电脑</b> 按住鼠标 · <b>手机</b> 长按屏幕 · 松开起跳</p>
+        </section>
+
+        <section id="gameOverPanel" class="panel game-over-panel" hidden>
+          <p class="eyebrow">SIGNAL LOST</p>
+          <h2>坠入暗巷</h2>
+          <div class="result-grid">
+            <div><span>本局</span><strong id="finalScore">0</strong></div>
+            <div><span>最高</span><strong id="bestScore">0</strong></div>
+          </div>
+          <p id="recordMessage" class="record-message"></p>
+          <button id="restartButton" class="pixel-button primary" type="button">再跑一局</button>
+        </section>
+
+        <div id="tutorial" class="tutorial" hidden>
+          <span class="finger">◉</span>
+          <strong>按住蓄力</strong>
+          <small>松开后向前跃出</small>
+        </div>
+      </section>
+
+      <footer class="status-strip">
+        <span>原创像素实验体</span>
+        <span id="deviceHint">POINTER READY</span>
+      </footer>
+    </main>
+    <script type="module" src="./game.js"></script>
+  </body>
+</html>
