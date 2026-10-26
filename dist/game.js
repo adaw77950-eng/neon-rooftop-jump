@@ -55,6 +55,7 @@ let floaters = [];
 let rain = makeRain();
 let screenShake = 0;
 let firstRun = !loadSave().played;
+let uiBusy = false;
 
 function loadSave() {
   try { return { best: 0, muted: false, played: false, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }; }
@@ -99,6 +100,14 @@ function beginCharge(pointerId) {
   ui.tutorial.hidden = true;
   firstRun = false;
   tone(160, .025, 'square', .025);
+}
+
+function dismissStartPanel() {
+  if (!ui.startPanel?.isConnected) return;
+  ui.startPanel.classList.add('is-dismissed');
+  ui.startPanel.hidden = true;
+  ui.startPanel.setAttribute('inert', '');
+  ui.startPanel.remove();
 }
 
 function cancelCharge() {
@@ -453,14 +462,34 @@ canvas.addEventListener('pointerdown', (event) => {
   canvas.setPointerCapture?.(event.pointerId);
   beginCharge(event.pointerId);
 });
-canvas.addEventListener('pointerup', (event) => { event.preventDefault(); releaseCharge(event.pointerId); });
-canvas.addEventListener('pointercancel', cancelCharge);
-canvas.addEventListener('lostpointercapture', () => { if (action === 'charging') cancelCharge(); });
+window.addEventListener('pointerup', (event) => {
+  if (action !== 'charging') return;
+  event.preventDefault();
+  releaseCharge(event.pointerId);
+}, { capture: true, passive: false });
+window.addEventListener('pointercancel', (event) => {
+  if (activePointer !== null && event.pointerId !== activePointer) return;
+  cancelCharge();
+}, { capture: true });
+canvas.addEventListener('contextmenu', (event) => event.preventDefault());
 window.addEventListener('blur', cancelCharge);
 document.addEventListener('visibilitychange', () => { if (document.hidden) cancelCharge(); });
 
-ui.startButton.addEventListener('click', () => { ensureAudio(); resetGame(); });
-ui.restartButton.addEventListener('click', () => { ensureAudio(); resetGame(); });
+ui.startButton.addEventListener('click', () => {
+  if (uiBusy) return;
+  uiBusy = true;
+  dismissStartPanel();
+  ensureAudio();
+  resetGame();
+  requestAnimationFrame(() => { uiBusy = false; });
+});
+ui.restartButton.addEventListener('click', () => {
+  if (uiBusy) return;
+  uiBusy = true;
+  ensureAudio();
+  resetGame();
+  requestAnimationFrame(() => { uiBusy = false; });
+});
 ui.muteButton.addEventListener('click', () => {
   muted = !muted;
   ui.muteButton.textContent = muted ? '声音 OFF' : '声音 ON';
