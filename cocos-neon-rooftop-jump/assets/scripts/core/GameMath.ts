@@ -77,7 +77,8 @@ export function makeNextPlatform(
   const opening = score < 3;
   const difficulty = difficultyAt(score);
   const width = opening ? 78 + random() * 18 : 92 - difficulty * 34 - random() * 8;
-  const gap = opening ? 54 + random() * 28 : 66 + difficulty * 58 + random() * 24;
+  const rawGap = opening ? 54 + random() * 28 : 66 + difficulty * 58 + random() * 24;
+  const gap = Math.min(rawGap, Math.max(54, 178 - current.width));
   const verticalRange = opening ? 18 : 24 + difficulty * 24;
   const yDelta = (random() * 2 - 1) * verticalRange;
 

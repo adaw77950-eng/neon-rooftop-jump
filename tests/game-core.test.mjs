@@ -67,3 +67,15 @@ test('makeNextPlatform stays reachable and safe during the opening', () => {
   assert.ok(late.width >= 50 && late.width <= 92);
   assert.ok(late.x - (current.x + current.width) <= 148);
 });
+
+test('every generated platform remains reachable from the previous left edge', () => {
+  for (const width of [50, 72, 96, 108]) {
+    for (const score of [0, 5, 20, 50, 999]) {
+      for (const roll of [0, 0.5, 0.999]) {
+        const current = { x: 100, y: 250, width, height: 40 };
+        const next = makeNextPlatform(current, score, () => roll);
+        assert.ok(next.x - current.x <= 178, `width=${width}, score=${score}, roll=${roll}`);
+      }
+    }
+  }
+});

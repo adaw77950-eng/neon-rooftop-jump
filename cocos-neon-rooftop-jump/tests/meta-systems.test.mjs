@@ -8,6 +8,8 @@ import {
   dailyKey,
   dailySeed,
   purchaseSkin,
+  normalizeSkinState,
+  normalizeTaskState,
   resolveDailyCompletion,
   seededRandom,
 } from '../assets/scripts/core/MetaSystems.ts';
@@ -52,4 +54,9 @@ test('skins require coins and stay permanently unlocked', () => {
   assert.equal(SKINS.length, 4);
   assert.notEqual(SKINS[0].shape, SKINS[1].shape);
   assert.notEqual(SKINS[0].accent, SKINS[1].accent);
+});
+
+test('legacy save corruption is normalized', () => {
+  assert.deepEqual(normalizeTaskState({ jumps: '4', perfects: -9, claimed: null }), { jumps: 4, perfects: 0, bestScore: 0, claimed: [] });
+  assert.deepEqual(normalizeSkinState({ coins: 'oops', unlocked: 'cyan', equipped: 'cyan' }), { coins: 0, unlocked: ['courier'], equipped: 'courier' });
 });

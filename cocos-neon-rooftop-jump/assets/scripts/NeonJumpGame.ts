@@ -33,6 +33,8 @@ import {
   createTaskState,
   dailyKey,
   dailySeed,
+  normalizeSkinState,
+  normalizeTaskState,
   purchaseSkin,
   resolveDailyCompletion,
   seededRandom,
@@ -346,12 +348,8 @@ export class NeonJumpGame extends Component {
       const saved = JSON.parse(sys.localStorage.getItem(SAVE_KEY) || '{}');
       this.best = saved.best || 0;
       this.dailyCompleted = saved.dailyCompleted || '';
-      this.taskState = { ...createTaskState(), ...(saved.taskState || {}) };
-      this.skinState = {
-        coins: saved.skinState?.coins || 0,
-        unlocked: saved.skinState?.unlocked || ['courier'],
-        equipped: saved.skinState?.equipped || 'courier',
-      };
+      this.taskState = normalizeTaskState(saved.taskState);
+      this.skinState = normalizeSkinState(saved.skinState);
     } catch {
       this.best = 0;
       this.taskState = createTaskState();

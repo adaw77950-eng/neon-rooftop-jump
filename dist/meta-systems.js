@@ -34,7 +34,23 @@ export function resolveDailyCompletion(progress, completedKey, key = dailyKey())
   return { complete, reward: complete && completedKey !== key ? DAILY_REWARD : 0, completedKey: complete ? key : completedKey };
 }
 export function createTaskState() { return { jumps: 0, perfects: 0, bestScore: 0, claimed: [] }; }
+export function normalizeTaskState(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const number = (input) => Number.isFinite(Number(input)) ? Math.max(0, Math.floor(Number(input))) : 0;
+  const validIds = new Set(TASKS.map((task) => task.id));
+  return { jumps: number(source.jumps), perfects: number(source.perfects), bestScore: number(source.bestScore), claimed: Array.isArray(source.claimed) ? [...new Set(source.claimed.filter((id) => validIds.has(id)))] : [] };
+}
+export function normalizeSkinState(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const validIds = new Set(SKINS.map((skin) => skin.id));
+  const unlocked = Array.isArray(source.unlocked) ? [...new Set(source.unlocked.filter((id) => validIds.has(id)))] : [];
+  if (!unlocked.includes('courier')) unlocked.unshift('courier');
+  const equipped = validIds.has(source.equipped) && unlocked.includes(source.equipped) ? source.equipped : 'courier';
+  const coins = Number.isFinite(Number(source.coins)) ? Math.max(0, Math.floor(Number(source.coins))) : 0;
+  return { coins, unlocked, equipped };
+}
 export function advanceTasks(current, progress) {
+  current = normalizeTaskState(current);
   const state = {
     jumps: current.jumps + (progress.jumps || 0),
     perfects: current.perfects + (progress.perfects || 0),
@@ -50,6 +66,7 @@ export function advanceTasks(current, progress) {
   return { state, coinsEarned, completed };
 }
 export function purchaseSkin(state, skinId) {
+  state = normalizeSkinState(state);
   const skin = SKINS.find((item) => item.id === skinId);
   if (!skin) return { ok: false, reason: 'missing', state };
   if (state.unlocked.includes(skinId)) return { ok: true, reason: 'equipped', state: { ...state, equipped: skinId } };

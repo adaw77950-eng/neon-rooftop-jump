@@ -6,7 +6,7 @@ import {
   jumpFromCharge,
   makeNextPlatform,
 } from './game-core.js';
-import { DAILY_REWARD, DAILY_TARGET, SKINS, TASKS, advanceTasks, createTaskState, dailyKey, dailySeed, purchaseSkin, resolveDailyCompletion, seededRandom } from './meta-systems.js';
+import { DAILY_REWARD, DAILY_TARGET, SKINS, TASKS, advanceTasks, createTaskState, dailyKey, dailySeed, normalizeSkinState, normalizeTaskState, purchaseSkin, resolveDailyCompletion, seededRandom } from './meta-systems.js';
 
 const canvas = document.querySelector('#gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
@@ -93,8 +93,8 @@ function loadSave() {
   const defaults = { best: 0, muted: false, played: false, dailyCompleted: '', taskState: createTaskState(), skinState: { coins: 0, unlocked: ['courier'], equipped: 'courier' } };
   try {
     const saved = { ...defaults, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') };
-    saved.taskState = { ...createTaskState(), ...(saved.taskState || {}) };
-    saved.skinState = { ...defaults.skinState, ...(saved.skinState || {}) };
+    saved.taskState = normalizeTaskState(saved.taskState);
+    saved.skinState = normalizeSkinState(saved.skinState);
     return saved;
   } catch { return defaults; }
 }

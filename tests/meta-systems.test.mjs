@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DAILY_TARGET, SKINS, advanceTasks, createTaskState, dailyKey, dailySeed, purchaseSkin, resolveDailyCompletion, seededRandom } from '../dist/meta-systems.js';
+import { DAILY_TARGET, SKINS, advanceTasks, createTaskState, dailyKey, dailySeed, normalizeSkinState, normalizeTaskState, purchaseSkin, resolveDailyCompletion, seededRandom } from '../dist/meta-systems.js';
 
 test('daily challenge is deterministic for one day', () => {
   const key = dailyKey(new Date('2026-10-26T12:00:00+08:00'));
@@ -34,4 +34,9 @@ test('skins use coins, unlock permanently, and equip', () => {
   assert.equal(SKINS.length, 4);
   assert.notEqual(SKINS[0].shape, SKINS[1].shape);
   assert.notEqual(SKINS[0].accent, SKINS[1].accent);
+});
+
+test('invalid legacy saves are repaired instead of crashing the shop', () => {
+  assert.deepEqual(normalizeTaskState({ jumps: '4', perfects: -9, claimed: null }), { jumps: 4, perfects: 0, bestScore: 0, claimed: [] });
+  assert.deepEqual(normalizeSkinState({ coins: 'oops', unlocked: 'cyan', equipped: 'cyan' }), { coins: 0, unlocked: ['courier'], equipped: 'courier' });
 });

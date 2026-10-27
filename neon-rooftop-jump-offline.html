@@ -404,7 +404,8 @@ function makeNextPlatform(current, score, random = Math.random) {
   const opening = score < 3;
   const difficulty = difficultyAt(score);
   const width = opening ? 78 + random() * 18 : 92 - difficulty * 34 - random() * 8;
-  const gap = opening ? 54 + random() * 28 : 66 + difficulty * 58 + random() * 24;
+  const rawGap = opening ? 54 + random() * 28 : 66 + difficulty * 58 + random() * 24;
+  const gap = Math.min(rawGap, Math.max(54, 178 - current.width));
   const verticalRange = opening ? 18 : 24 + difficulty * 24;
   const yDelta = (random() * 2 - 1) * verticalRange;
   const height = 34 + Math.round(random() * 18);
@@ -462,7 +463,23 @@ function resolveDailyCompletion(progress, completedKey, key = dailyKey()) {
   return { complete, reward: complete && completedKey !== key ? DAILY_REWARD : 0, completedKey: complete ? key : completedKey };
 }
 function createTaskState() { return { jumps: 0, perfects: 0, bestScore: 0, claimed: [] }; }
+function normalizeTaskState(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const number = (input) => Number.isFinite(Number(input)) ? Math.max(0, Math.floor(Number(input))) : 0;
+  const validIds = new Set(TASKS.map((task) => task.id));
+  return { jumps: number(source.jumps), perfects: number(source.perfects), bestScore: number(source.bestScore), claimed: Array.isArray(source.claimed) ? [...new Set(source.claimed.filter((id) => validIds.has(id)))] : [] };
+}
+function normalizeSkinState(value) {
+  const source = value && typeof value === 'object' ? value : {};
+  const validIds = new Set(SKINS.map((skin) => skin.id));
+  const unlocked = Array.isArray(source.unlocked) ? [...new Set(source.unlocked.filter((id) => validIds.has(id)))] : [];
+  if (!unlocked.includes('courier')) unlocked.unshift('courier');
+  const equipped = validIds.has(source.equipped) && unlocked.includes(source.equipped) ? source.equipped : 'courier';
+  const coins = Number.isFinite(Number(source.coins)) ? Math.max(0, Math.floor(Number(source.coins))) : 0;
+  return { coins, unlocked, equipped };
+}
 function advanceTasks(current, progress) {
+  current = normalizeTaskState(current);
   const state = {
     jumps: current.jumps + (progress.jumps || 0),
     perfects: current.perfects + (progress.perfects || 0),
@@ -478,6 +495,7 @@ function advanceTasks(current, progress) {
   return { state, coinsEarned, completed };
 }
 function purchaseSkin(state, skinId) {
+  state = normalizeSkinState(state);
   const skin = SKINS.find((item) => item.id === skinId);
   if (!skin) return { ok: false, reason: 'missing', state };
   if (state.unlocked.includes(skinId)) return { ok: true, reason: 'equipped', state: { ...state, equipped: skinId } };
@@ -570,8 +588,8 @@ function loadSave() {
   const defaults = { best: 0, muted: false, played: false, dailyCompleted: '', taskState: createTaskState(), skinState: { coins: 0, unlocked: ['courier'], equipped: 'courier' } };
   try {
     const saved = { ...defaults, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') };
-    saved.taskState = { ...createTaskState(), ...(saved.taskState || {}) };
-    saved.skinState = { ...defaults.skinState, ...(saved.skinState || {}) };
+    saved.taskState = normalizeTaskState(saved.taskState);
+    saved.skinState = normalizeSkinState(saved.skinState);
     return saved;
   } catch { return defaults; }
 }

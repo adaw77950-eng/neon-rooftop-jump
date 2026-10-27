@@ -82,10 +82,33 @@ export function createTaskState(): TaskState {
   return { jumps: 0, perfects: 0, bestScore: 0, claimed: [] };
 }
 
+export function normalizeTaskState(value: unknown): TaskState {
+  const source = value && typeof value === 'object' ? value as Partial<TaskState> : {};
+  const number = (input: unknown): number => Number.isFinite(Number(input)) ? Math.max(0, Math.floor(Number(input))) : 0;
+  const validIds = new Set(TASKS.map((task) => task.id));
+  return {
+    jumps: number(source.jumps),
+    perfects: number(source.perfects),
+    bestScore: number(source.bestScore),
+    claimed: Array.isArray(source.claimed) ? [...new Set(source.claimed.filter((id) => validIds.has(id)))] : [],
+  };
+}
+
+export function normalizeSkinState(value: unknown): SkinState {
+  const source = value && typeof value === 'object' ? value as Partial<SkinState> : {};
+  const validIds = new Set(SKINS.map((skin) => skin.id));
+  const unlocked = Array.isArray(source.unlocked) ? [...new Set(source.unlocked.filter((id) => validIds.has(id)))] : [];
+  if (!unlocked.includes('courier')) unlocked.unshift('courier');
+  const equipped = source.equipped && validIds.has(source.equipped) && unlocked.includes(source.equipped) ? source.equipped : 'courier';
+  const coins = Number.isFinite(Number(source.coins)) ? Math.max(0, Math.floor(Number(source.coins))) : 0;
+  return { coins, unlocked, equipped };
+}
+
 export function advanceTasks(
   current: TaskState,
   progress: { jumps?: number; perfects?: number; bestScore?: number },
 ): { state: TaskState; coinsEarned: number; completed: string[] } {
+  current = normalizeTaskState(current);
   const state: TaskState = {
     jumps: current.jumps + (progress.jumps ?? 0),
     perfects: current.perfects + (progress.perfects ?? 0),
@@ -104,6 +127,7 @@ export function advanceTasks(
 }
 
 export function purchaseSkin(state: SkinState, skinId: string): { ok: boolean; state: SkinState } {
+  state = normalizeSkinState(state);
   const skin = SKINS.find((item) => item.id === skinId);
   if (!skin) return { ok: false, state };
   if (state.unlocked.includes(skinId)) return { ok: true, state: { ...state, equipped: skinId } };
