@@ -408,6 +408,10 @@ function seededRandom(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+function resolveDailyCompletion(progress, completedKey, key = dailyKey()) {
+  const complete = progress >= DAILY_TARGET;
+  return { complete, reward: complete && completedKey !== key ? DAILY_REWARD : 0, completedKey: complete ? key : completedKey };
+}
 function createTaskState() { return { jumps: 0, perfects: 0, bestScore: 0, claimed: [] }; }
 function advanceTasks(current, progress) {
   const state = {
@@ -497,6 +501,7 @@ let firstRun = !loadSave().played;
 let uiBusy = false;
 let dailyMode = false;
 let dailyWon = false;
+let dailyRewardEarned = 0;
 let runRandom = Math.random;
 let fragileTimer = 0;
 let taskState = loadSave().taskState;
@@ -524,6 +529,7 @@ function persist(extra = {}) {
 function resetGame(isDaily = false) {
   dailyMode = isDaily;
   dailyWon = false;
+  dailyRewardEarned = 0;
   runRandom = isDaily ? seededRandom(dailySeed(dailyKey())) : Math.random;
   score = 0;
   combo = 0;
@@ -630,7 +636,7 @@ function update(dt, now) {
   screenShake = Math.max(0, screenShake - dt * 18);
   for (let i = currentPlatform + 1; i < platforms.length; i += 1) {
     const p = platforms[i];
-    if (p.kind === 'moving') p.y = (p.baseY ?? p.y) + Math.sin(elapsed * 1.8 + (p.phase ?? 0)) * 18;
+    if (p.kind === 'moving' && p !== jump?.target) p.y = (p.baseY ?? p.y) + Math.sin(elapsed * 1.8 + (p.phase ?? 0)) * 18;
   }
 
   if (mode === 'playing') {
@@ -714,10 +720,12 @@ function resolveLanding() {
   while (platforms.length < currentPlatform + 7) {
     platforms.push(makeNextPlatform(platforms.at(-1), score, runRandom));
   }
-  if (dailyMode && currentPlatform >= DAILY_TARGET && dailyCompleted !== dailyKey()) {
+  const dailyResult = resolveDailyCompletion(currentPlatform, dailyCompleted);
+  if (dailyMode && dailyResult.complete) {
     dailyWon = true;
-    dailyCompleted = dailyKey();
-    skinState.coins += DAILY_REWARD;
+    dailyRewardEarned = dailyResult.reward;
+    dailyCompleted = dailyResult.completedKey;
+    skinState.coins += dailyResult.reward;
     persist();
     renderMetaUi();
     finishGame();
@@ -734,7 +742,9 @@ function finishGame() {
   ui.bestScore.textContent = String(best);
   ui.gameOverEyebrow.textContent = dailyWon ? 'DAILY COMPLETE' : 'SIGNAL LOST';
   ui.gameOverTitle.textContent = dailyWon ? '挑战完成' : '坠入暗巷';
-  ui.recordMessage.textContent = dailyWon ? `获得 ${DAILY_REWARD} 像素币` : score > previousBest && score > 0 ? 'NEW NIGHT RECORD // 新纪录' : combo >= 3 ? `最高连续完美 ${combo}` : '';
+  ui.recordMessage.textContent = dailyWon
+    ? dailyRewardEarned ? `今日首次通关 +${dailyRewardEarned} 像素币` : '今日挑战完成 · 奖励已领取'
+    : score > previousBest && score > 0 ? 'NEW NIGHT RECORD // 新纪录' : combo >= 3 ? `最高连续完美 ${combo}` : '';
   ui.gameOverPanel.hidden = false;
 }
 

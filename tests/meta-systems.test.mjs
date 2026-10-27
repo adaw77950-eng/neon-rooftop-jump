@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DAILY_TARGET, SKINS, advanceTasks, createTaskState, dailyKey, dailySeed, purchaseSkin, seededRandom } from '../dist/meta-systems.js';
+import { DAILY_TARGET, SKINS, advanceTasks, createTaskState, dailyKey, dailySeed, purchaseSkin, resolveDailyCompletion, seededRandom } from '../dist/meta-systems.js';
 
 test('daily challenge is deterministic for one day', () => {
   const key = dailyKey(new Date('2026-10-26T12:00:00+08:00'));
@@ -9,6 +9,14 @@ test('daily challenge is deterministic for one day', () => {
   assert.equal(key, '2026-10-26');
   assert.deepEqual([a(), a(), a()], [b(), b(), b()]);
   assert.equal(DAILY_TARGET, 12);
+});
+
+test('daily challenge always ends but rewards only once per day', () => {
+  const first = resolveDailyCompletion(12, '', '2026-10-27');
+  assert.deepEqual(first, { complete: true, reward: 80, completedKey: '2026-10-27' });
+  const replay = resolveDailyCompletion(12, first.completedKey, '2026-10-27');
+  assert.deepEqual(replay, { complete: true, reward: 0, completedKey: '2026-10-27' });
+  assert.equal(resolveDailyCompletion(11, '', '2026-10-27').complete, false);
 });
 
 test('tasks reward only once', () => {

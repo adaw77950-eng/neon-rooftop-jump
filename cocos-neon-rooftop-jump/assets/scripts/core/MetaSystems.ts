@@ -62,6 +62,19 @@ export function seededRandom(seed: number): () => number {
   };
 }
 
+export function resolveDailyCompletion(
+  progress: number,
+  completedKey: string,
+  key = dailyKey(),
+): { complete: boolean; reward: number; completedKey: string } {
+  const complete = progress >= DAILY_TARGET;
+  return {
+    complete,
+    reward: complete && completedKey !== key ? DAILY_REWARD : 0,
+    completedKey: complete ? key : completedKey,
+  };
+}
+
 export function createTaskState(): TaskState {
   return { jumps: 0, perfects: 0, bestScore: 0, claimed: [] };
 }

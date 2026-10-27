@@ -34,6 +34,7 @@ import {
   dailyKey,
   dailySeed,
   purchaseSkin,
+  resolveDailyCompletion,
   seededRandom,
   type SkinState,
   type TaskState,
@@ -127,7 +128,7 @@ export class NeonJumpGame extends Component {
 
     for (let i = this.currentPlatform + 1; i < this.platforms.length; i += 1) {
       const platform = this.platforms[i];
-      if (platform.kind === 'moving') {
+      if (platform.kind === 'moving' && platform !== this.jump?.target) {
         platform.y = (platform.baseY ?? platform.y) + Math.sin(this.elapsed * 1.8 + (platform.phase ?? 0)) * 18;
       }
     }
@@ -322,10 +323,11 @@ export class NeonJumpGame extends Component {
     while (this.platforms.length < this.currentPlatform + 8) {
       this.platforms.push(makeNextPlatform(this.platforms[this.platforms.length - 1], this.score, this.runRandom));
     }
-    if (this.dailyMode && this.currentPlatform >= DAILY_TARGET && this.dailyCompleted !== dailyKey()) {
+    const dailyResult = resolveDailyCompletion(this.currentPlatform, this.dailyCompleted);
+    if (this.dailyMode && dailyResult.complete) {
       this.dailyWon = true;
-      this.dailyCompleted = dailyKey();
-      this.skinState.coins += DAILY_REWARD;
+      this.dailyCompleted = dailyResult.completedKey;
+      this.skinState.coins += dailyResult.reward;
       this.persist();
       this.finishGame();
     }

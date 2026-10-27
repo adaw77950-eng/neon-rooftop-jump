@@ -8,6 +8,7 @@ import {
   dailyKey,
   dailySeed,
   purchaseSkin,
+  resolveDailyCompletion,
   seededRandom,
 } from '../assets/scripts/core/MetaSystems.ts';
 
@@ -20,6 +21,14 @@ test('daily challenge keeps the same seed for the same calendar day', () => {
   const b = seededRandom(dailySeed(key));
   assert.deepEqual([a(), a(), a()], [b(), b(), b()]);
   assert.equal(DAILY_TARGET, 12);
+});
+
+test('daily challenge completes on replay without paying twice', () => {
+  const first = resolveDailyCompletion(12, '', '2026-10-27');
+  assert.equal(first.reward, 80);
+  const replay = resolveDailyCompletion(12, first.completedKey, '2026-10-27');
+  assert.equal(replay.complete, true);
+  assert.equal(replay.reward, 0);
 });
 
 test('task progress pays each reward only once', () => {

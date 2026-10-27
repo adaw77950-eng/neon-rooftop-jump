@@ -29,6 +29,10 @@ export function seededRandom(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+export function resolveDailyCompletion(progress, completedKey, key = dailyKey()) {
+  const complete = progress >= DAILY_TARGET;
+  return { complete, reward: complete && completedKey !== key ? DAILY_REWARD : 0, completedKey: complete ? key : completedKey };
+}
 export function createTaskState() { return { jumps: 0, perfects: 0, bestScore: 0, claimed: [] }; }
 export function advanceTasks(current, progress) {
   const state = {
