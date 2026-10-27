@@ -6,6 +6,7 @@ import {
   jumpFromCharge,
   makeNextPlatform,
 } from './game-core.js';
+import { DAILY_REWARD, DAILY_TARGET, SKINS, TASKS, advanceTasks, createTaskState, dailyKey, dailySeed, purchaseSkin, seededRandom } from './meta-systems.js';
 
 const canvas = document.querySelector('#gameCanvas');
 const ctx = canvas.getContext('2d', { alpha: false });
@@ -15,11 +16,24 @@ const ui = {
   startPanel: document.querySelector('#startPanel'),
   gameOverPanel: document.querySelector('#gameOverPanel'),
   startButton: document.querySelector('#startButton'),
+  dailyButton: document.querySelector('#dailyButton'),
+  skinsButton: document.querySelector('#skinsButton'),
+  skinsPanel: document.querySelector('#skinsPanel'),
+  closeSkinsButton: document.querySelector('#closeSkinsButton'),
+  skinGrid: document.querySelector('#skinGrid'),
+  shopMessage: document.querySelector('#shopMessage'),
+  coinCount: document.querySelector('#coinCount'),
+  shopCoinCount: document.querySelector('#shopCoinCount'),
+  dailyStatus: document.querySelector('#dailyStatus'),
+  taskList: document.querySelector('#taskList'),
   restartButton: document.querySelector('#restartButton'),
+  menuButton: document.querySelector('#menuButton'),
   muteButton: document.querySelector('#muteButton'),
   finalScore: document.querySelector('#finalScore'),
   bestScore: document.querySelector('#bestScore'),
   recordMessage: document.querySelector('#recordMessage'),
+  gameOverEyebrow: document.querySelector('#gameOverEyebrow'),
+  gameOverTitle: document.querySelector('#gameOverTitle'),
   tutorial: document.querySelector('#tutorial'),
   deviceHint: document.querySelector('#deviceHint'),
 };
@@ -57,21 +71,36 @@ let rain = makeRain();
 let screenShake = 0;
 let firstRun = !loadSave().played;
 let uiBusy = false;
+let dailyMode = false;
+let dailyWon = false;
+let runRandom = Math.random;
+let fragileTimer = 0;
+let taskState = loadSave().taskState;
+let skinState = loadSave().skinState;
+let dailyCompleted = loadSave().dailyCompleted;
 
 function loadSave() {
-  try { return { best: 0, muted: false, played: false, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }; }
-  catch { return { best: 0, muted: false, played: false }; }
+  const defaults = { best: 0, muted: false, played: false, dailyCompleted: '', taskState: createTaskState(), skinState: { coins: 0, unlocked: ['courier'], equipped: 'courier' } };
+  try {
+    const saved = { ...defaults, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') };
+    saved.taskState = { ...createTaskState(), ...(saved.taskState || {}) };
+    saved.skinState = { ...defaults.skinState, ...(saved.skinState || {}) };
+    return saved;
+  } catch { return defaults; }
 }
 
 function persist(extra = {}) {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ best, muted, played: true, ...extra }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ best, muted, played: true, dailyCompleted, taskState, skinState, ...extra }));
   } catch {
     // 部分手机浏览器会限制 file:// 页面的本地存储；不影响离线游玩。
   }
 }
 
-function resetGame() {
+function resetGame(isDaily = false) {
+  dailyMode = isDaily;
+  dailyWon = false;
+  runRandom = isDaily ? seededRandom(dailySeed(dailyKey())) : Math.random;
   score = 0;
   combo = 0;
   action = 'idle';
@@ -80,9 +109,10 @@ function resetGame() {
   particles = [];
   floaters = [];
   screenShake = 0;
-  const first = { x: 80, y: 440, width: 108, height: 54, hue: 186 };
+  fragileTimer = 0;
+  const first = { x: 80, y: 440, width: 108, height: 54, hue: 186, kind: 'normal', baseY: 440 };
   platforms = [first];
-  for (let i = 1; i < 7; i += 1) platforms.push(makeNextPlatform(platforms[i - 1], i - 1));
+  for (let i = 1; i < 7; i += 1) platforms.push(makeNextPlatform(platforms[i - 1], i - 1, runRandom));
   currentPlatform = 0;
   player = { x: first.x + first.width / 2, y: first.y, vy: 0, squash: 0, trail: [] };
   cameraX = 0;
@@ -91,8 +121,18 @@ function resetGame() {
   jump = null;
   ui.startPanel.hidden = true;
   ui.gameOverPanel.hidden = true;
+  ui.skinsPanel.hidden = true;
   ui.tutorial.hidden = !firstRun;
   persist();
+}
+
+function applyTaskProgress(progress) {
+  const result = advanceTasks(taskState, progress);
+  taskState = result.state;
+  skinState.coins += result.coinsEarned;
+  if (result.coinsEarned) floaters.push({ x: player.x, y: player.y - 70, text: `任务 +${result.coinsEarned}币`, life: 1.5, color: colors.amber });
+  persist();
+  renderMetaUi();
 }
 
 function beginCharge(pointerId) {
@@ -108,11 +148,21 @@ function beginCharge(pointerId) {
 }
 
 function dismissStartPanel() {
-  if (!ui.startPanel?.isConnected) return;
+  if (!ui.startPanel) return;
   ui.startPanel.classList.add('is-dismissed');
   ui.startPanel.hidden = true;
   ui.startPanel.setAttribute('inert', '');
-  ui.startPanel.remove();
+}
+
+function showMenu() {
+  mode = 'menu';
+  action = 'idle';
+  ui.gameOverPanel.hidden = true;
+  ui.skinsPanel.hidden = true;
+  ui.startPanel.classList.remove('is-dismissed');
+  ui.startPanel.hidden = false;
+  ui.startPanel.removeAttribute('inert');
+  renderMetaUi();
 }
 
 function cancelCharge() {
@@ -128,6 +178,10 @@ function releaseCharge(pointerId) {
   if (activePointer !== null && pointerId !== activePointer) return;
   charge = chargeRatio(performance.now() - chargeStartedAt);
   const physics = jumpFromCharge(charge);
+  if (platforms[currentPlatform]?.kind === 'bounce') {
+    physics.distance *= 1.12;
+    physics.height *= 1.28;
+  }
   const target = platforms[currentPlatform + 1];
   jump = {
     startedAt: performance.now(),
@@ -142,6 +196,7 @@ function releaseCharge(pointerId) {
   action = 'jumping';
   activePointer = null;
   player.squash = 0;
+  applyTaskProgress({ jumps: 1 });
   tone(260 + charge * 210, .08, 'square', .04);
 }
 
@@ -149,6 +204,10 @@ function update(dt, now) {
   elapsed += dt;
   cameraX += (cameraTarget - cameraX) * Math.min(1, dt * 4.8);
   screenShake = Math.max(0, screenShake - dt * 18);
+  for (let i = currentPlatform + 1; i < platforms.length; i += 1) {
+    const p = platforms[i];
+    if (p.kind === 'moving') p.y = (p.baseY ?? p.y) + Math.sin(elapsed * 1.8 + (p.phase ?? 0)) * 18;
+  }
 
   if (mode === 'playing') {
     if (action === 'charging') {
@@ -170,6 +229,9 @@ function update(dt, now) {
       player.y += player.vy * dt;
       player.x += 22 * dt;
       if (player.y - platforms[currentPlatform].y > H * .7) finishGame();
+    } else if (action === 'idle' && fragileTimer > 0) {
+      fragileTimer -= dt;
+      if (fragileTimer <= 0) { action = 'falling'; player.vy = 42; }
     }
   }
 
@@ -191,7 +253,8 @@ function update(dt, now) {
 function resolveLanding() {
   const target = jump.target;
   const landing = target ? classifyLanding(player.x, target) : 'miss';
-  if (landing === 'miss') {
+  const hazardHit = target?.hasHazard && Math.abs(player.x - (target.x + target.width / 2)) < Math.min(17, target.width * .18);
+  if (landing === 'miss' || hazardHit) {
     action = 'falling';
     player.vy = 42;
     combo = 0;
@@ -210,6 +273,7 @@ function resolveLanding() {
     floaters.push({ x: player.x, y: player.y - 50, text: `完美 +${bonus}`, life: 1.1, color: colors.amber });
     burst(player.x, player.y - 4, colors.amber, 16);
     tone(660 + combo * 35, .12, 'square', .05);
+    applyTaskProgress({ perfects: 1 });
   } else {
     combo = 0;
     floaters.push({ x: player.x, y: player.y - 46, text: landing === 'edge' ? '惊险!' : '+1', life: .8, color: landing === 'edge' ? colors.pink : colors.cyan });
@@ -220,10 +284,19 @@ function resolveLanding() {
   player.squash = 6;
   setTimeout(() => { if (action === 'idle') player.squash = 0; }, 120);
   action = 'idle';
+  fragileTimer = target.kind === 'fragile' ? .85 : 0;
   jump = null;
   cameraTarget = Math.max(0, target.x - 120);
   while (platforms.length < currentPlatform + 7) {
-    platforms.push(makeNextPlatform(platforms.at(-1), score));
+    platforms.push(makeNextPlatform(platforms.at(-1), score, runRandom));
+  }
+  if (dailyMode && currentPlatform >= DAILY_TARGET && dailyCompleted !== dailyKey()) {
+    dailyWon = true;
+    dailyCompleted = dailyKey();
+    skinState.coins += DAILY_REWARD;
+    persist();
+    renderMetaUi();
+    finishGame();
   }
 }
 
@@ -232,10 +305,12 @@ function finishGame() {
   action = 'idle';
   const previousBest = best;
   best = Math.max(best, score);
-  persist();
+  applyTaskProgress({ bestScore: score });
   ui.finalScore.textContent = String(score);
   ui.bestScore.textContent = String(best);
-  ui.recordMessage.textContent = score > previousBest && score > 0 ? 'NEW NIGHT RECORD // 新纪录' : combo >= 3 ? `最高连续完美 ${combo}` : '';
+  ui.gameOverEyebrow.textContent = dailyWon ? 'DAILY COMPLETE' : 'SIGNAL LOST';
+  ui.gameOverTitle.textContent = dailyWon ? '挑战完成' : '坠入暗巷';
+  ui.recordMessage.textContent = dailyWon ? `获得 ${DAILY_REWARD} 像素币` : score > previousBest && score > 0 ? 'NEW NIGHT RECORD // 新纪录' : combo >= 3 ? `最高连续完美 ${combo}` : '';
   ui.gameOverPanel.hidden = false;
 }
 
@@ -302,7 +377,7 @@ function drawPlatforms() {
     const glow = i === currentPlatform + 1;
     ctx.save();
     if (glow) { ctx.shadowColor = `hsl(${hue} 90% 64%)`; ctx.shadowBlur = 12; }
-    ctx.fillStyle = `hsl(${hue} 48% 46%)`;
+    ctx.fillStyle = p.kind === 'bounce' ? colors.amber : p.kind === 'fragile' ? '#ff8469' : p.kind === 'moving' ? colors.blue : `hsl(${hue} 48% 46%)`;
     ctx.fillRect(x, p.y - 8, Math.round(p.width), 8);
     ctx.fillStyle = `hsl(${hue} 35% 27%)`;
     ctx.fillRect(x, p.y, Math.round(p.width), p.height);
@@ -312,6 +387,19 @@ function drawPlatforms() {
     ctx.fillRect(x + 8, p.y + 12, Math.max(8, Math.round(p.width * .22)), 4);
     ctx.fillStyle = '#080915';
     for (let wx = x + 10; wx < x + p.width - 8; wx += 18) ctx.fillRect(wx, p.y + p.height - 11, 7, 5);
+    if (p.kind === 'fragile') {
+      ctx.strokeStyle = '#ffbea0'; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(x + p.width * .35, p.y); ctx.lineTo(x + p.width * .5, p.y + 16); ctx.lineTo(x + p.width * .62, p.y + 7); ctx.stroke();
+    }
+    if (p.kind === 'bounce') {
+      ctx.strokeStyle = colors.amber; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(x + 10, p.y + 12); ctx.lineTo(x + 20, p.y); ctx.lineTo(x + 30, p.y + 12); ctx.lineTo(x + 40, p.y); ctx.stroke();
+    }
+    if (p.hasHazard) {
+      const center = x + p.width / 2;
+      ctx.strokeStyle = colors.cyan; ctx.lineWidth = 3; ctx.beginPath();
+      ctx.moveTo(center - 16, p.y - 8); ctx.lineTo(center - 8, p.y - 20); ctx.lineTo(center, p.y - 8); ctx.lineTo(center + 8, p.y - 20); ctx.lineTo(center + 16, p.y - 8); ctx.stroke();
+    }
     if (glow) {
       ctx.globalAlpha = .55 + Math.sin(elapsed * 4) * .2;
       ctx.strokeStyle = `hsl(${hue} 90% 70%)`;
@@ -331,9 +419,10 @@ function drawPlayer() {
   if (action === 'jumping') ctx.rotate(Math.sin((performance.now() - jump.startedAt) / jump.duration * Math.PI * 2) * .18);
   ctx.fillStyle = 'rgba(0,0,0,.3)';
   ctx.fillRect(-13, 2, 26, 5);
-  ctx.fillStyle = '#18203b';
+  const skin = SKINS.find((item) => item.id === skinState.equipped) || SKINS[0];
+  ctx.fillStyle = skin.body;
   ctx.fillRect(-8, -33 + squash, 16, 27 - squash);
-  ctx.fillStyle = colors.pink;
+  ctx.fillStyle = skin.accent;
   ctx.fillRect(-8, -28 + squash, 4, 17 - squash);
   ctx.fillStyle = '#2c3f70';
   ctx.fillRect(-10, -31 + squash, 4, 21 - squash);
@@ -397,6 +486,11 @@ function drawHud() {
   ctx.font = 'bold 26px "Courier New", monospace';
   ctx.fillText(String(score).padStart(3, '0'), 24, 62);
 
+  ctx.textAlign = 'right';
+  ctx.fillStyle = colors.amber;
+  ctx.font = 'bold 10px "Courier New", monospace';
+  ctx.fillText(dailyMode ? `DAILY ${Math.min(currentPlatform, DAILY_TARGET)}/${DAILY_TARGET}` : `COINS ${skinState.coins}`, W - 20, 22);
+
   if (combo > 1) {
     ctx.textAlign = 'right';
     ctx.fillStyle = colors.amber;
@@ -452,6 +546,29 @@ function tone(frequency, duration, type = 'square', gainValue = .03) {
   oscillator.stop(audio.currentTime + duration);
 }
 
+function renderMetaUi() {
+  ui.coinCount.textContent = String(skinState.coins);
+  ui.shopCoinCount.textContent = String(skinState.coins);
+  ui.dailyStatus.textContent = dailyCompleted === dailyKey() ? '今日已完成' : `${DAILY_TARGET} 跳 / +${DAILY_REWARD}币`;
+  ui.taskList.innerHTML = TASKS.map((task) => {
+    const value = Math.min(taskState[task.field], task.target);
+    const done = taskState.claimed.includes(task.id);
+    return `<div class="task-row"><span>${done ? '✓ ' : ''}${task.label}</span><span>${value}/${task.target} · ${task.reward}币</span></div>`;
+  }).join('');
+  ui.skinGrid.innerHTML = SKINS.map((skin) => {
+    const owned = skinState.unlocked.includes(skin.id);
+    const equipped = skinState.equipped === skin.id;
+    return `<button class="skin-card${equipped ? ' is-equipped' : ''}" type="button" data-skin="${skin.id}"><span class="skin-avatar" style="--skin-body:${skin.body};--skin-accent:${skin.accent}"></span><strong>${skin.name}</strong><small>${equipped ? '使用中' : owned ? '点击装备' : `${skin.price} 像素币`}</small></button>`;
+  }).join('');
+}
+
+function openSkins() {
+  ui.startPanel.hidden = true;
+  ui.skinsPanel.hidden = false;
+  ui.shopMessage.textContent = '皮肤只改变外观，不影响跳跃属性。';
+  renderMetaUi();
+}
+
 function lerp(a, b, t) { return a + (b - a) * t; }
 
 function loop(now) {
@@ -485,16 +602,39 @@ ui.startButton.addEventListener('click', () => {
   uiBusy = true;
   dismissStartPanel();
   ensureAudio();
-  resetGame();
+  resetGame(false);
   requestAnimationFrame(() => { uiBusy = false; });
+});
+ui.dailyButton.addEventListener('click', () => {
+  if (uiBusy) return;
+  uiBusy = true;
+  dismissStartPanel();
+  ensureAudio();
+  resetGame(true);
+  requestAnimationFrame(() => { uiBusy = false; });
+});
+ui.skinsButton.addEventListener('click', openSkins);
+ui.closeSkinsButton.addEventListener('click', showMenu);
+ui.skinGrid.addEventListener('click', (event) => {
+  const card = event.target.closest('[data-skin]');
+  if (!card) return;
+  const result = purchaseSkin(skinState, card.dataset.skin);
+  skinState = result.state;
+  ui.shopMessage.textContent = result.ok
+    ? result.reason === 'purchased' ? '解锁成功，已自动装备。' : '皮肤已装备。'
+    : result.reason === 'coins' ? '像素币不足，完成任务或每日挑战可以获得。' : '皮肤不存在。';
+  persist();
+  renderMetaUi();
+  tone(result.ok ? 620 : 120, .08, 'square', .03);
 });
 ui.restartButton.addEventListener('click', () => {
   if (uiBusy) return;
   uiBusy = true;
   ensureAudio();
-  resetGame();
+  resetGame(dailyMode);
   requestAnimationFrame(() => { uiBusy = false; });
 });
+ui.menuButton.addEventListener('click', showMenu);
 ui.muteButton.addEventListener('click', () => {
   muted = !muted;
   ui.muteButton.textContent = muted ? '声音 OFF' : '声音 ON';
@@ -504,8 +644,8 @@ ui.muteButton.addEventListener('click', () => {
 
 ui.muteButton.textContent = muted ? '声音 OFF' : '声音 ON';
 ui.deviceHint.textContent = matchMedia('(pointer: coarse)').matches ? 'TOUCH READY' : 'POINTER READY';
-resetGame();
-mode = 'menu';
-ui.startPanel.hidden = false;
+resetGame(false);
+showMenu();
 ui.tutorial.hidden = true;
+renderMetaUi();
 requestAnimationFrame(loop);

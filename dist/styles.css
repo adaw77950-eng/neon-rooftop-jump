@@ -150,6 +150,16 @@ canvas {
     9px 6px 0 rgba(0, 0, 0, .65);
 }
 .lede { max-width: 310px; margin: 24px 0 26px; color: #b9c8d5; font-size: 13px; line-height: 1.8; }
+.meta-wallet { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; color: var(--amber); }
+.meta-wallet span { font-size: 10px; letter-spacing: .12em; }
+.meta-wallet strong { font-size: 22px; }
+.mode-grid { width: min(320px, 100%); display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.mode-grid .primary { grid-column: 1 / -1; width: 100%; }
+.mode-grid .pixel-button { min-width: 0; }
+.mode-grid small { display: block; margin-top: 3px; font-size: 8px; opacity: .72; }
+.task-list { width: min(320px, 100%); display: grid; gap: 5px; margin-top: 14px; }
+.task-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; color: #91a1b5; font-size: 9px; }
+.task-row span:last-child { color: var(--amber); }
 .control-copy { margin: 18px 0 0; max-width: 310px; color: #7f8ea1; font-size: 10px; line-height: 1.7; }
 .control-copy b { color: var(--amber); }
 
@@ -177,6 +187,18 @@ canvas {
 .result-grid span { display: block; color: #8091a6; font-size: 10px; }
 .result-grid strong { display: block; margin-top: 5px; color: var(--paper); font-size: 28px; }
 .record-message { min-height: 20px; margin: 0 0 18px; color: var(--amber); font-size: 12px; }
+.game-over-panel #menuButton { margin-top: 12px; }
+.skins-panel { align-items: stretch; justify-content: center; background: rgba(5, 6, 17, .96); }
+.shop-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.shop-heading h2 { margin: 0; color: var(--pink); font-size: 28px; }
+.shop-heading span { color: var(--amber); font-size: 11px; }
+.skin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 20px 0 12px; }
+.skin-card { min-height: 112px; display: grid; justify-items: start; align-content: space-between; gap: 8px; padding: 12px; border: 1px solid #34415b; background: rgba(13,18,37,.94); color: var(--paper); cursor: pointer; }
+.skin-card.is-equipped { border-color: var(--cyan); box-shadow: inset 0 0 0 2px rgba(88,246,231,.18); }
+.skin-avatar { width: 28px; height: 38px; border: 4px solid var(--skin-accent); background: var(--skin-body); box-shadow: 4px 4px 0 #000; }
+.skin-card strong { font-size: 11px; }
+.skin-card small { color: var(--amber); font-size: 9px; }
+.shop-message { min-height: 20px; margin: 0 0 12px; color: var(--cyan); font-size: 10px; }
 
 .tutorial {
   position: absolute;
@@ -218,6 +240,8 @@ canvas {
   .status-strip { display: none; }
   .start-panel h1 { font-size: 48px; }
   .lede { margin: 16px 0; }
+  .task-list, .control-copy { display: none; }
+  .skins-panel { padding: 20px; }
 }
 
 @media (pointer: coarse) {

@@ -1,0 +1,13 @@
+{
+  "name": "neon-rooftop-jump-cocos",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --experimental-strip-types --test tests/*.test.mjs",
+    "check:json": "node tools/check-project.mjs"
+  },
+  "creator": {
+    "version": "3.8.7"
+  }
+}

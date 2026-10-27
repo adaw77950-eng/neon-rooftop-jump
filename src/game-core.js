@@ -62,11 +62,28 @@ export function makeNextPlatform(current, score, random = Math.random) {
   const verticalRange = opening ? 18 : 24 + difficulty * 24;
   const yDelta = (random() * 2 - 1) * verticalRange;
 
+  const height = 34 + Math.round(random() * 18);
+  const hue = 176 + Math.round(random() * 130);
+  const kindRoll = opening ? 0 : random();
+  const hazardRoll = opening ? 1 : random();
+  const kind = kindRoll > 0.82
+    ? 'bounce'
+    : kindRoll > 0.62
+      ? 'fragile'
+      : kindRoll > 0.38
+        ? 'moving'
+        : 'normal';
+  const y = clamp(current.y + yDelta, 148, 310);
+
   return {
     x: current.x + current.width + gap,
-    y: clamp(current.y + yDelta, 148, 310),
+    y,
     width: clamp(width, 50, 96),
-    height: 34 + Math.round(random() * 18),
-    hue: 176 + Math.round(random() * 130),
+    height,
+    hue,
+    kind,
+    hasHazard: score >= 5 && hazardRoll < 0.32 && kind !== 'bounce',
+    baseY: y,
+    phase: random() * Math.PI * 2,
   };
 }

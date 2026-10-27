@@ -26,19 +26,34 @@
           <p class="eyebrow">ROOFTOP DELIVERY PROTOCOL</p>
           <h1>霓虹<br /><span>跃迁</span></h1>
           <p class="lede">城市断电前，把最后一枚数据芯片送到天际线尽头。</p>
-          <button id="startButton" class="pixel-button primary" type="button">开始跑酷</button>
+          <div class="meta-wallet"><span>PIXEL COINS</span><strong id="coinCount">0</strong></div>
+          <div class="mode-grid">
+            <button id="startButton" class="pixel-button primary" type="button">普通模式</button>
+            <button id="dailyButton" class="pixel-button" type="button">每日挑战 <small id="dailyStatus">12 跳</small></button>
+            <button id="skinsButton" class="pixel-button" type="button">皮肤商店</button>
+          </div>
+          <div id="taskList" class="task-list" aria-label="任务进度"></div>
           <p class="control-copy"><b>电脑</b> 按住鼠标 · <b>手机</b> 长按屏幕 · 松开起跳</p>
         </section>
 
+        <section id="skinsPanel" class="panel skins-panel" hidden>
+          <p class="eyebrow">COURIER LOADOUT</p>
+          <div class="shop-heading"><h2>皮肤仓库</h2><span>像素币 <strong id="shopCoinCount">0</strong></span></div>
+          <div id="skinGrid" class="skin-grid"></div>
+          <p id="shopMessage" class="shop-message"></p>
+          <button id="closeSkinsButton" class="pixel-button" type="button">返回主菜单</button>
+        </section>
+
         <section id="gameOverPanel" class="panel game-over-panel" hidden>
-          <p class="eyebrow">SIGNAL LOST</p>
-          <h2>坠入暗巷</h2>
+          <p id="gameOverEyebrow" class="eyebrow">SIGNAL LOST</p>
+          <h2 id="gameOverTitle">坠入暗巷</h2>
           <div class="result-grid">
             <div><span>本局</span><strong id="finalScore">0</strong></div>
             <div><span>最高</span><strong id="bestScore">0</strong></div>
           </div>
           <p id="recordMessage" class="record-message"></p>
           <button id="restartButton" class="pixel-button primary" type="button">再跑一局</button>
+          <button id="menuButton" class="pixel-button" type="button">返回主菜单</button>
         </section>
 
         <div id="tutorial" class="tutorial" hidden>

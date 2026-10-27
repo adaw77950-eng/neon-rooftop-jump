@@ -159,6 +159,16 @@ canvas {
     9px 6px 0 rgba(0, 0, 0, .65);
 }
 .lede { max-width: 310px; margin: 24px 0 26px; color: #b9c8d5; font-size: 13px; line-height: 1.8; }
+.meta-wallet { display: flex; align-items: baseline; gap: 10px; margin-bottom: 12px; color: var(--amber); }
+.meta-wallet span { font-size: 10px; letter-spacing: .12em; }
+.meta-wallet strong { font-size: 22px; }
+.mode-grid { width: min(320px, 100%); display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+.mode-grid .primary { grid-column: 1 / -1; width: 100%; }
+.mode-grid .pixel-button { min-width: 0; }
+.mode-grid small { display: block; margin-top: 3px; font-size: 8px; opacity: .72; }
+.task-list { width: min(320px, 100%); display: grid; gap: 5px; margin-top: 14px; }
+.task-row { display: grid; grid-template-columns: 1fr auto; gap: 8px; color: #91a1b5; font-size: 9px; }
+.task-row span:last-child { color: var(--amber); }
 .control-copy { margin: 18px 0 0; max-width: 310px; color: #7f8ea1; font-size: 10px; line-height: 1.7; }
 .control-copy b { color: var(--amber); }
 
@@ -186,6 +196,18 @@ canvas {
 .result-grid span { display: block; color: #8091a6; font-size: 10px; }
 .result-grid strong { display: block; margin-top: 5px; color: var(--paper); font-size: 28px; }
 .record-message { min-height: 20px; margin: 0 0 18px; color: var(--amber); font-size: 12px; }
+.game-over-panel #menuButton { margin-top: 12px; }
+.skins-panel { align-items: stretch; justify-content: center; background: rgba(5, 6, 17, .96); }
+.shop-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
+.shop-heading h2 { margin: 0; color: var(--pink); font-size: 28px; }
+.shop-heading span { color: var(--amber); font-size: 11px; }
+.skin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 20px 0 12px; }
+.skin-card { min-height: 112px; display: grid; justify-items: start; align-content: space-between; gap: 8px; padding: 12px; border: 1px solid #34415b; background: rgba(13,18,37,.94); color: var(--paper); cursor: pointer; }
+.skin-card.is-equipped { border-color: var(--cyan); box-shadow: inset 0 0 0 2px rgba(88,246,231,.18); }
+.skin-avatar { width: 28px; height: 38px; border: 4px solid var(--skin-accent); background: var(--skin-body); box-shadow: 4px 4px 0 #000; }
+.skin-card strong { font-size: 11px; }
+.skin-card small { color: var(--amber); font-size: 9px; }
+.shop-message { min-height: 20px; margin: 0 0 12px; color: var(--cyan); font-size: 10px; }
 
 .tutorial {
   position: absolute;
@@ -227,6 +249,8 @@ canvas {
   .status-strip { display: none; }
   .start-panel h1 { font-size: 48px; }
   .lede { margin: 16px 0; }
+  .task-list, .control-copy { display: none; }
+  .skins-panel { padding: 20px; }
 }
 
 @media (pointer: coarse) {
@@ -258,19 +282,34 @@ canvas {
           <p class="eyebrow">ROOFTOP DELIVERY PROTOCOL</p>
           <h1>霓虹<br /><span>跃迁</span></h1>
           <p class="lede">城市断电前，把最后一枚数据芯片送到天际线尽头。</p>
-          <button id="startButton" class="pixel-button primary" type="button">开始跑酷</button>
+          <div class="meta-wallet"><span>PIXEL COINS</span><strong id="coinCount">0</strong></div>
+          <div class="mode-grid">
+            <button id="startButton" class="pixel-button primary" type="button">普通模式</button>
+            <button id="dailyButton" class="pixel-button" type="button">每日挑战 <small id="dailyStatus">12 跳</small></button>
+            <button id="skinsButton" class="pixel-button" type="button">皮肤商店</button>
+          </div>
+          <div id="taskList" class="task-list" aria-label="任务进度"></div>
           <p class="control-copy"><b>电脑</b> 按住鼠标 · <b>手机</b> 长按屏幕 · 松开起跳</p>
         </section>
 
+        <section id="skinsPanel" class="panel skins-panel" hidden>
+          <p class="eyebrow">COURIER LOADOUT</p>
+          <div class="shop-heading"><h2>皮肤仓库</h2><span>像素币 <strong id="shopCoinCount">0</strong></span></div>
+          <div id="skinGrid" class="skin-grid"></div>
+          <p id="shopMessage" class="shop-message"></p>
+          <button id="closeSkinsButton" class="pixel-button" type="button">返回主菜单</button>
+        </section>
+
         <section id="gameOverPanel" class="panel game-over-panel" hidden>
-          <p class="eyebrow">SIGNAL LOST</p>
-          <h2>坠入暗巷</h2>
+          <p id="gameOverEyebrow" class="eyebrow">SIGNAL LOST</p>
+          <h2 id="gameOverTitle">坠入暗巷</h2>
           <div class="result-grid">
             <div><span>本局</span><strong id="finalScore">0</strong></div>
             <div><span>最高</span><strong id="bestScore">0</strong></div>
           </div>
           <p id="recordMessage" class="record-message"></p>
           <button id="restartButton" class="pixel-button primary" type="button">再跑一局</button>
+          <button id="menuButton" class="pixel-button" type="button">返回主菜单</button>
         </section>
 
         <div id="tutorial" class="tutorial" hidden>
@@ -319,13 +358,78 @@ function makeNextPlatform(current, score, random = Math.random) {
   const gap = opening ? 54 + random() * 28 : 66 + difficulty * 58 + random() * 24;
   const verticalRange = opening ? 18 : 24 + difficulty * 24;
   const yDelta = (random() * 2 - 1) * verticalRange;
+  const height = 34 + Math.round(random() * 18);
+  const hue = 176 + Math.round(random() * 130);
+  const kindRoll = opening ? 0 : random();
+  const hazardRoll = opening ? 1 : random();
+  const kind = kindRoll > .82 ? 'bounce' : kindRoll > .62 ? 'fragile' : kindRoll > .38 ? 'moving' : 'normal';
+  const y = clamp(current.y + yDelta, 148, 310);
   return {
     x: current.x + current.width + gap,
-    y: clamp(current.y + yDelta, 148, 310),
+    y,
     width: clamp(width, 50, 96),
-    height: 34 + Math.round(random() * 18),
-    hue: 176 + Math.round(random() * 130),
+    height,
+    hue,
+    kind,
+    hasHazard: score >= 5 && hazardRoll < .32 && kind !== 'bounce',
+    baseY: y,
+    phase: random() * Math.PI * 2,
   };
+}
+
+const DAILY_TARGET = 12;
+const DAILY_REWARD = 80;
+const TASKS = [
+  { id: 'jump10', label: '完成 10 次跳跃', field: 'jumps', target: 10, reward: 50 },
+  { id: 'perfect3', label: '累计 3 次完美落地', field: 'perfects', target: 3, reward: 50 },
+  { id: 'score15', label: '单局达到 15 分', field: 'bestScore', target: 15, reward: 80 },
+];
+const SKINS = [
+  { id: 'courier', name: '夜班信使', price: 0, body: '#18203b', accent: '#ff4fa3' },
+  { id: 'magenta', name: '故障玫红', price: 120, body: '#4b265e', accent: '#ff4fa3' },
+  { id: 'gold', name: '黄金脉冲', price: 260, body: '#4a391b', accent: '#ffd05a' },
+  { id: 'cyan', name: '量子青蓝', price: 420, body: '#153f46', accent: '#58f6e7' },
+];
+function dailyKey(date = new Date()) {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+}
+function dailySeed(key) {
+  let hash = 2166136261;
+  for (let i = 0; i < key.length; i += 1) { hash ^= key.charCodeAt(i); hash = Math.imul(hash, 16777619); }
+  return hash >>> 0;
+}
+function seededRandom(seed) {
+  let value = seed >>> 0;
+  return () => {
+    value += 0x6D2B79F5;
+    let t = value;
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+function createTaskState() { return { jumps: 0, perfects: 0, bestScore: 0, claimed: [] }; }
+function advanceTasks(current, progress) {
+  const state = {
+    jumps: current.jumps + (progress.jumps || 0),
+    perfects: current.perfects + (progress.perfects || 0),
+    bestScore: Math.max(current.bestScore, progress.bestScore || 0),
+    claimed: [...current.claimed],
+  };
+  const completed = [];
+  let coinsEarned = 0;
+  for (const task of TASKS) {
+    if (state[task.field] < task.target || state.claimed.includes(task.id)) continue;
+    state.claimed.push(task.id); completed.push(task.id); coinsEarned += task.reward;
+  }
+  return { state, coinsEarned, completed };
+}
+function purchaseSkin(state, skinId) {
+  const skin = SKINS.find((item) => item.id === skinId);
+  if (!skin) return { ok: false, reason: 'missing', state };
+  if (state.unlocked.includes(skinId)) return { ok: true, reason: 'equipped', state: { ...state, equipped: skinId } };
+  if (state.coins < skin.price) return { ok: false, reason: 'coins', state };
+  return { ok: true, reason: 'purchased', state: { coins: state.coins - skin.price, unlocked: [...state.unlocked, skinId], equipped: skinId } };
 }
 
 const canvas = document.querySelector('#gameCanvas');
@@ -336,11 +440,24 @@ const ui = {
   startPanel: document.querySelector('#startPanel'),
   gameOverPanel: document.querySelector('#gameOverPanel'),
   startButton: document.querySelector('#startButton'),
+  dailyButton: document.querySelector('#dailyButton'),
+  skinsButton: document.querySelector('#skinsButton'),
+  skinsPanel: document.querySelector('#skinsPanel'),
+  closeSkinsButton: document.querySelector('#closeSkinsButton'),
+  skinGrid: document.querySelector('#skinGrid'),
+  shopMessage: document.querySelector('#shopMessage'),
+  coinCount: document.querySelector('#coinCount'),
+  shopCoinCount: document.querySelector('#shopCoinCount'),
+  dailyStatus: document.querySelector('#dailyStatus'),
+  taskList: document.querySelector('#taskList'),
   restartButton: document.querySelector('#restartButton'),
+  menuButton: document.querySelector('#menuButton'),
   muteButton: document.querySelector('#muteButton'),
   finalScore: document.querySelector('#finalScore'),
   bestScore: document.querySelector('#bestScore'),
   recordMessage: document.querySelector('#recordMessage'),
+  gameOverEyebrow: document.querySelector('#gameOverEyebrow'),
+  gameOverTitle: document.querySelector('#gameOverTitle'),
   tutorial: document.querySelector('#tutorial'),
   deviceHint: document.querySelector('#deviceHint'),
 };
@@ -378,21 +495,36 @@ let rain = makeRain();
 let screenShake = 0;
 let firstRun = !loadSave().played;
 let uiBusy = false;
+let dailyMode = false;
+let dailyWon = false;
+let runRandom = Math.random;
+let fragileTimer = 0;
+let taskState = loadSave().taskState;
+let skinState = loadSave().skinState;
+let dailyCompleted = loadSave().dailyCompleted;
 
 function loadSave() {
-  try { return { best: 0, muted: false, played: false, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') }; }
-  catch { return { best: 0, muted: false, played: false }; }
+  const defaults = { best: 0, muted: false, played: false, dailyCompleted: '', taskState: createTaskState(), skinState: { coins: 0, unlocked: ['courier'], equipped: 'courier' } };
+  try {
+    const saved = { ...defaults, ...JSON.parse(localStorage.getItem(SAVE_KEY) || '{}') };
+    saved.taskState = { ...createTaskState(), ...(saved.taskState || {}) };
+    saved.skinState = { ...defaults.skinState, ...(saved.skinState || {}) };
+    return saved;
+  } catch { return defaults; }
 }
 
 function persist(extra = {}) {
   try {
-    localStorage.setItem(SAVE_KEY, JSON.stringify({ best, muted, played: true, ...extra }));
+    localStorage.setItem(SAVE_KEY, JSON.stringify({ best, muted, played: true, dailyCompleted, taskState, skinState, ...extra }));
   } catch {
     // 部分手机浏览器会限制 file:// 页面的本地存储；不影响离线游玩。
   }
 }
 
-function resetGame() {
+function resetGame(isDaily = false) {
+  dailyMode = isDaily;
+  dailyWon = false;
+  runRandom = isDaily ? seededRandom(dailySeed(dailyKey())) : Math.random;
   score = 0;
   combo = 0;
   action = 'idle';
@@ -401,9 +533,10 @@ function resetGame() {
   particles = [];
   floaters = [];
   screenShake = 0;
-  const first = { x: 80, y: 440, width: 108, height: 54, hue: 186 };
+  fragileTimer = 0;
+  const first = { x: 80, y: 440, width: 108, height: 54, hue: 186, kind: 'normal', baseY: 440 };
   platforms = [first];
-  for (let i = 1; i < 7; i += 1) platforms.push(makeNextPlatform(platforms[i - 1], i - 1));
+  for (let i = 1; i < 7; i += 1) platforms.push(makeNextPlatform(platforms[i - 1], i - 1, runRandom));
   currentPlatform = 0;
   player = { x: first.x + first.width / 2, y: first.y, vy: 0, squash: 0, trail: [] };
   cameraX = 0;
@@ -412,8 +545,18 @@ function resetGame() {
   jump = null;
   ui.startPanel.hidden = true;
   ui.gameOverPanel.hidden = true;
+  ui.skinsPanel.hidden = true;
   ui.tutorial.hidden = !firstRun;
   persist();
+}
+
+function applyTaskProgress(progress) {
+  const result = advanceTasks(taskState, progress);
+  taskState = result.state;
+  skinState.coins += result.coinsEarned;
+  if (result.coinsEarned) floaters.push({ x: player.x, y: player.y - 70, text: `任务 +${result.coinsEarned}币`, life: 1.5, color: colors.amber });
+  persist();
+  renderMetaUi();
 }
 
 function beginCharge(pointerId) {
@@ -429,11 +572,21 @@ function beginCharge(pointerId) {
 }
 
 function dismissStartPanel() {
-  if (!ui.startPanel?.isConnected) return;
+  if (!ui.startPanel) return;
   ui.startPanel.classList.add('is-dismissed');
   ui.startPanel.hidden = true;
   ui.startPanel.setAttribute('inert', '');
-  ui.startPanel.remove();
+}
+
+function showMenu() {
+  mode = 'menu';
+  action = 'idle';
+  ui.gameOverPanel.hidden = true;
+  ui.skinsPanel.hidden = true;
+  ui.startPanel.classList.remove('is-dismissed');
+  ui.startPanel.hidden = false;
+  ui.startPanel.removeAttribute('inert');
+  renderMetaUi();
 }
 
 function cancelCharge() {
@@ -449,6 +602,10 @@ function releaseCharge(pointerId) {
   if (activePointer !== null && pointerId !== activePointer) return;
   charge = chargeRatio(performance.now() - chargeStartedAt);
   const physics = jumpFromCharge(charge);
+  if (platforms[currentPlatform]?.kind === 'bounce') {
+    physics.distance *= 1.12;
+    physics.height *= 1.28;
+  }
   const target = platforms[currentPlatform + 1];
   jump = {
     startedAt: performance.now(),
@@ -463,6 +620,7 @@ function releaseCharge(pointerId) {
   action = 'jumping';
   activePointer = null;
   player.squash = 0;
+  applyTaskProgress({ jumps: 1 });
   tone(260 + charge * 210, .08, 'square', .04);
 }
 
@@ -470,6 +628,10 @@ function update(dt, now) {
   elapsed += dt;
   cameraX += (cameraTarget - cameraX) * Math.min(1, dt * 4.8);
   screenShake = Math.max(0, screenShake - dt * 18);
+  for (let i = currentPlatform + 1; i < platforms.length; i += 1) {
+    const p = platforms[i];
+    if (p.kind === 'moving') p.y = (p.baseY ?? p.y) + Math.sin(elapsed * 1.8 + (p.phase ?? 0)) * 18;
+  }
 
   if (mode === 'playing') {
     if (action === 'charging') {
@@ -491,6 +653,9 @@ function update(dt, now) {
       player.y += player.vy * dt;
       player.x += 22 * dt;
       if (player.y - platforms[currentPlatform].y > H * .7) finishGame();
+    } else if (action === 'idle' && fragileTimer > 0) {
+      fragileTimer -= dt;
+      if (fragileTimer <= 0) { action = 'falling'; player.vy = 42; }
     }
   }
 
@@ -512,7 +677,8 @@ function update(dt, now) {
 function resolveLanding() {
   const target = jump.target;
   const landing = target ? classifyLanding(player.x, target) : 'miss';
-  if (landing === 'miss') {
+  const hazardHit = target?.hasHazard && Math.abs(player.x - (target.x + target.width / 2)) < Math.min(17, target.width * .18);
+  if (landing === 'miss' || hazardHit) {
     action = 'falling';
     player.vy = 42;
     combo = 0;
@@ -531,6 +697,7 @@ function resolveLanding() {
     floaters.push({ x: player.x, y: player.y - 50, text: `完美 +${bonus}`, life: 1.1, color: colors.amber });
     burst(player.x, player.y - 4, colors.amber, 16);
     tone(660 + combo * 35, .12, 'square', .05);
+    applyTaskProgress({ perfects: 1 });
   } else {
     combo = 0;
     floaters.push({ x: player.x, y: player.y - 46, text: landing === 'edge' ? '惊险!' : '+1', life: .8, color: landing === 'edge' ? colors.pink : colors.cyan });
@@ -541,10 +708,19 @@ function resolveLanding() {
   player.squash = 6;
   setTimeout(() => { if (action === 'idle') player.squash = 0; }, 120);
   action = 'idle';
+  fragileTimer = target.kind === 'fragile' ? .85 : 0;
   jump = null;
   cameraTarget = Math.max(0, target.x - 120);
   while (platforms.length < currentPlatform + 7) {
-    platforms.push(makeNextPlatform(platforms.at(-1), score));
+    platforms.push(makeNextPlatform(platforms.at(-1), score, runRandom));
+  }
+  if (dailyMode && currentPlatform >= DAILY_TARGET && dailyCompleted !== dailyKey()) {
+    dailyWon = true;
+    dailyCompleted = dailyKey();
+    skinState.coins += DAILY_REWARD;
+    persist();
+    renderMetaUi();
+    finishGame();
   }
 }
 
@@ -553,10 +729,12 @@ function finishGame() {
   action = 'idle';
   const previousBest = best;
   best = Math.max(best, score);
-  persist();
+  applyTaskProgress({ bestScore: score });
   ui.finalScore.textContent = String(score);
   ui.bestScore.textContent = String(best);
-  ui.recordMessage.textContent = score > previousBest && score > 0 ? 'NEW NIGHT RECORD // 新纪录' : combo >= 3 ? `最高连续完美 ${combo}` : '';
+  ui.gameOverEyebrow.textContent = dailyWon ? 'DAILY COMPLETE' : 'SIGNAL LOST';
+  ui.gameOverTitle.textContent = dailyWon ? '挑战完成' : '坠入暗巷';
+  ui.recordMessage.textContent = dailyWon ? `获得 ${DAILY_REWARD} 像素币` : score > previousBest && score > 0 ? 'NEW NIGHT RECORD // 新纪录' : combo >= 3 ? `最高连续完美 ${combo}` : '';
   ui.gameOverPanel.hidden = false;
 }
 
@@ -623,7 +801,7 @@ function drawPlatforms() {
     const glow = i === currentPlatform + 1;
     ctx.save();
     if (glow) { ctx.shadowColor = `hsl(${hue} 90% 64%)`; ctx.shadowBlur = 12; }
-    ctx.fillStyle = `hsl(${hue} 48% 46%)`;
+    ctx.fillStyle = p.kind === 'bounce' ? colors.amber : p.kind === 'fragile' ? '#ff8469' : p.kind === 'moving' ? colors.blue : `hsl(${hue} 48% 46%)`;
     ctx.fillRect(x, p.y - 8, Math.round(p.width), 8);
     ctx.fillStyle = `hsl(${hue} 35% 27%)`;
     ctx.fillRect(x, p.y, Math.round(p.width), p.height);
@@ -633,6 +811,19 @@ function drawPlatforms() {
     ctx.fillRect(x + 8, p.y + 12, Math.max(8, Math.round(p.width * .22)), 4);
     ctx.fillStyle = '#080915';
     for (let wx = x + 10; wx < x + p.width - 8; wx += 18) ctx.fillRect(wx, p.y + p.height - 11, 7, 5);
+    if (p.kind === 'fragile') {
+      ctx.strokeStyle = '#ffbea0'; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(x + p.width * .35, p.y); ctx.lineTo(x + p.width * .5, p.y + 16); ctx.lineTo(x + p.width * .62, p.y + 7); ctx.stroke();
+    }
+    if (p.kind === 'bounce') {
+      ctx.strokeStyle = colors.amber; ctx.lineWidth = 2; ctx.beginPath();
+      ctx.moveTo(x + 10, p.y + 12); ctx.lineTo(x + 20, p.y); ctx.lineTo(x + 30, p.y + 12); ctx.lineTo(x + 40, p.y); ctx.stroke();
+    }
+    if (p.hasHazard) {
+      const center = x + p.width / 2;
+      ctx.strokeStyle = colors.cyan; ctx.lineWidth = 3; ctx.beginPath();
+      ctx.moveTo(center - 16, p.y - 8); ctx.lineTo(center - 8, p.y - 20); ctx.lineTo(center, p.y - 8); ctx.lineTo(center + 8, p.y - 20); ctx.lineTo(center + 16, p.y - 8); ctx.stroke();
+    }
     if (glow) {
       ctx.globalAlpha = .55 + Math.sin(elapsed * 4) * .2;
       ctx.strokeStyle = `hsl(${hue} 90% 70%)`;
@@ -652,9 +843,10 @@ function drawPlayer() {
   if (action === 'jumping') ctx.rotate(Math.sin((performance.now() - jump.startedAt) / jump.duration * Math.PI * 2) * .18);
   ctx.fillStyle = 'rgba(0,0,0,.3)';
   ctx.fillRect(-13, 2, 26, 5);
-  ctx.fillStyle = '#18203b';
+  const skin = SKINS.find((item) => item.id === skinState.equipped) || SKINS[0];
+  ctx.fillStyle = skin.body;
   ctx.fillRect(-8, -33 + squash, 16, 27 - squash);
-  ctx.fillStyle = colors.pink;
+  ctx.fillStyle = skin.accent;
   ctx.fillRect(-8, -28 + squash, 4, 17 - squash);
   ctx.fillStyle = '#2c3f70';
   ctx.fillRect(-10, -31 + squash, 4, 21 - squash);
@@ -718,6 +910,11 @@ function drawHud() {
   ctx.font = 'bold 26px "Courier New", monospace';
   ctx.fillText(String(score).padStart(3, '0'), 24, 62);
 
+  ctx.textAlign = 'right';
+  ctx.fillStyle = colors.amber;
+  ctx.font = 'bold 10px "Courier New", monospace';
+  ctx.fillText(dailyMode ? `DAILY ${Math.min(currentPlatform, DAILY_TARGET)}/${DAILY_TARGET}` : `COINS ${skinState.coins}`, W - 20, 22);
+
   if (combo > 1) {
     ctx.textAlign = 'right';
     ctx.fillStyle = colors.amber;
@@ -773,6 +970,29 @@ function tone(frequency, duration, type = 'square', gainValue = .03) {
   oscillator.stop(audio.currentTime + duration);
 }
 
+function renderMetaUi() {
+  ui.coinCount.textContent = String(skinState.coins);
+  ui.shopCoinCount.textContent = String(skinState.coins);
+  ui.dailyStatus.textContent = dailyCompleted === dailyKey() ? '今日已完成' : `${DAILY_TARGET} 跳 / +${DAILY_REWARD}币`;
+  ui.taskList.innerHTML = TASKS.map((task) => {
+    const value = Math.min(taskState[task.field], task.target);
+    const done = taskState.claimed.includes(task.id);
+    return `<div class="task-row"><span>${done ? '✓ ' : ''}${task.label}</span><span>${value}/${task.target} · ${task.reward}币</span></div>`;
+  }).join('');
+  ui.skinGrid.innerHTML = SKINS.map((skin) => {
+    const owned = skinState.unlocked.includes(skin.id);
+    const equipped = skinState.equipped === skin.id;
+    return `<button class="skin-card${equipped ? ' is-equipped' : ''}" type="button" data-skin="${skin.id}"><span class="skin-avatar" style="--skin-body:${skin.body};--skin-accent:${skin.accent}"></span><strong>${skin.name}</strong><small>${equipped ? '使用中' : owned ? '点击装备' : `${skin.price} 像素币`}</small></button>`;
+  }).join('');
+}
+
+function openSkins() {
+  ui.startPanel.hidden = true;
+  ui.skinsPanel.hidden = false;
+  ui.shopMessage.textContent = '皮肤只改变外观，不影响跳跃属性。';
+  renderMetaUi();
+}
+
 function lerp(a, b, t) { return a + (b - a) * t; }
 
 function loop(now) {
@@ -806,16 +1026,39 @@ ui.startButton.addEventListener('click', () => {
   uiBusy = true;
   dismissStartPanel();
   ensureAudio();
-  resetGame();
+  resetGame(false);
   requestAnimationFrame(() => { uiBusy = false; });
+});
+ui.dailyButton.addEventListener('click', () => {
+  if (uiBusy) return;
+  uiBusy = true;
+  dismissStartPanel();
+  ensureAudio();
+  resetGame(true);
+  requestAnimationFrame(() => { uiBusy = false; });
+});
+ui.skinsButton.addEventListener('click', openSkins);
+ui.closeSkinsButton.addEventListener('click', showMenu);
+ui.skinGrid.addEventListener('click', (event) => {
+  const card = event.target.closest('[data-skin]');
+  if (!card) return;
+  const result = purchaseSkin(skinState, card.dataset.skin);
+  skinState = result.state;
+  ui.shopMessage.textContent = result.ok
+    ? result.reason === 'purchased' ? '解锁成功，已自动装备。' : '皮肤已装备。'
+    : result.reason === 'coins' ? '像素币不足，完成任务或每日挑战可以获得。' : '皮肤不存在。';
+  persist();
+  renderMetaUi();
+  tone(result.ok ? 620 : 120, .08, 'square', .03);
 });
 ui.restartButton.addEventListener('click', () => {
   if (uiBusy) return;
   uiBusy = true;
   ensureAudio();
-  resetGame();
+  resetGame(dailyMode);
   requestAnimationFrame(() => { uiBusy = false; });
 });
+ui.menuButton.addEventListener('click', showMenu);
 ui.muteButton.addEventListener('click', () => {
   muted = !muted;
   ui.muteButton.textContent = muted ? '声音 OFF' : '声音 ON';
@@ -825,10 +1068,10 @@ ui.muteButton.addEventListener('click', () => {
 
 ui.muteButton.textContent = muted ? '声音 OFF' : '声音 ON';
 ui.deviceHint.textContent = matchMedia('(pointer: coarse)').matches ? 'TOUCH READY' : 'POINTER READY';
-resetGame();
-mode = 'menu';
-ui.startPanel.hidden = false;
+resetGame(false);
+showMenu();
 ui.tutorial.hidden = true;
+renderMetaUi();
 requestAnimationFrame(loop);
 
 </script>
