@@ -21,6 +21,14 @@ const ui = {
   skinsPanel: document.querySelector('#skinsPanel'),
   closeSkinsButton: document.querySelector('#closeSkinsButton'),
   skinGrid: document.querySelector('#skinGrid'),
+  skinStage: document.querySelector('#skinStage'),
+  shopAvatar: document.querySelector('#shopAvatar'),
+  skinRarity: document.querySelector('#skinRarity'),
+  skinName: document.querySelector('#skinName'),
+  skinTagline: document.querySelector('#skinTagline'),
+  skinPriceText: document.querySelector('#skinPriceText'),
+  skinPriceBar: document.querySelector('#skinPriceBar'),
+  skinActionButton: document.querySelector('#skinActionButton'),
   shopMessage: document.querySelector('#shopMessage'),
   coinCount: document.querySelector('#coinCount'),
   shopCoinCount: document.querySelector('#shopCoinCount'),
@@ -79,6 +87,7 @@ let fragileTimer = 0;
 let taskState = loadSave().taskState;
 let skinState = loadSave().skinState;
 let dailyCompleted = loadSave().dailyCompleted;
+let selectedSkinId = skinState.equipped;
 
 function loadSave() {
   const defaults = { best: 0, muted: false, played: false, dailyCompleted: '', taskState: createTaskState(), skinState: { coins: 0, unlocked: ['courier'], equipped: 'courier' } };
@@ -561,17 +570,35 @@ function renderMetaUi() {
     const done = taskState.claimed.includes(task.id);
     return `<div class="task-row"><span>${done ? '✓ ' : ''}${task.label}</span><span>${value}/${task.target} · ${task.reward}币</span></div>`;
   }).join('');
+  const selected = SKINS.find((skin) => skin.id === selectedSkinId) || SKINS[0];
+  const selectedOwned = skinState.unlocked.includes(selected.id);
+  const selectedEquipped = skinState.equipped === selected.id;
+  ui.skinStage.style.setProperty('--skin-body', selected.body);
+  ui.skinStage.style.setProperty('--skin-accent', selected.accent);
+  ui.shopAvatar.style.setProperty('--skin-body', selected.body);
+  ui.shopAvatar.style.setProperty('--skin-accent', selected.accent);
+  ui.skinRarity.textContent = `${selected.rarity} / ${selectedOwned ? '已解锁' : '未解锁'}`;
+  ui.skinRarity.style.setProperty('--skin-accent', selected.accent);
+  ui.skinName.textContent = selected.name;
+  ui.skinTagline.textContent = selected.tagline;
+  ui.skinPriceText.textContent = selectedOwned ? (selectedEquipped ? '当前装备' : '已拥有') : `${skinState.coins} / ${selected.price} 像素币`;
+  ui.skinPriceBar.style.width = selectedOwned ? '100%' : `${Math.min(100, skinState.coins / selected.price * 100)}%`;
+  ui.skinPriceBar.style.background = selected.accent;
+  ui.skinActionButton.textContent = selectedEquipped ? '已装备' : selectedOwned ? '装备这套皮肤' : `解锁 · ${selected.price} 币`;
+  ui.skinActionButton.disabled = selectedEquipped;
   ui.skinGrid.innerHTML = SKINS.map((skin) => {
     const owned = skinState.unlocked.includes(skin.id);
     const equipped = skinState.equipped === skin.id;
-    return `<button class="skin-card${equipped ? ' is-equipped' : ''}" type="button" data-skin="${skin.id}"><span class="skin-avatar" style="--skin-body:${skin.body};--skin-accent:${skin.accent}"></span><strong>${skin.name}</strong><small>${equipped ? '使用中' : owned ? '点击装备' : `${skin.price} 像素币`}</small></button>`;
+    const selectedClass = selectedSkinId === skin.id ? ' is-selected' : '';
+    return `<button class="skin-card${equipped ? ' is-equipped' : ''}${selectedClass}" style="--skin-body:${skin.body};--skin-accent:${skin.accent}" type="button" data-skin="${skin.id}" aria-label="预览${skin.name}"><span class="skin-swatch"></span><strong>${skin.name}</strong></button>`;
   }).join('');
 }
 
 function openSkins() {
   ui.startPanel.hidden = true;
   ui.skinsPanel.hidden = false;
-  ui.shopMessage.textContent = '皮肤只改变外观，不影响跳跃属性。';
+  selectedSkinId = skinState.equipped;
+  ui.shopMessage.textContent = '选择一套装备，查看完整预览。';
   renderMetaUi();
 }
 
@@ -624,10 +651,16 @@ ui.closeSkinsButton.addEventListener('click', showMenu);
 ui.skinGrid.addEventListener('click', (event) => {
   const card = event.target.closest('[data-skin]');
   if (!card) return;
-  const result = purchaseSkin(skinState, card.dataset.skin);
+  selectedSkinId = card.dataset.skin;
+  ui.shopMessage.textContent = '预览已更新。确认后再解锁或装备。';
+  renderMetaUi();
+  tone(380, .035, 'square', .018);
+});
+ui.skinActionButton.addEventListener('click', () => {
+  const result = purchaseSkin(skinState, selectedSkinId);
   skinState = result.state;
   ui.shopMessage.textContent = result.ok
-    ? result.reason === 'purchased' ? '解锁成功，已自动装备。' : '皮肤已装备。'
+    ? result.reason === 'purchased' ? '解锁成功，已自动装备。现在去屋顶亮相吧。' : '装备完成，外观已即时生效。'
     : result.reason === 'coins' ? '像素币不足，完成任务或每日挑战可以获得。' : '皮肤不存在。';
   persist();
   renderMetaUi();

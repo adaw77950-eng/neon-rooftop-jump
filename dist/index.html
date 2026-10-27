@@ -37,11 +37,26 @@
         </section>
 
         <section id="skinsPanel" class="panel skins-panel" hidden>
-          <p class="eyebrow">COURIER LOADOUT</p>
-          <div class="shop-heading"><h2>皮肤仓库</h2><span>像素币 <strong id="shopCoinCount">0</strong></span></div>
-          <div id="skinGrid" class="skin-grid"></div>
+          <div class="shop-heading">
+            <div><p class="eyebrow">COURIER LOADOUT</p><h2>霓虹装备舱</h2></div>
+            <span class="coin-chip">◈ <strong id="shopCoinCount">0</strong></span>
+          </div>
+          <div id="skinStage" class="skin-stage">
+            <div class="stage-grid" aria-hidden="true"></div>
+            <div id="shopAvatar" class="shop-avatar" aria-hidden="true"><i></i><b></b><span></span></div>
+            <div class="skin-detail">
+              <span id="skinRarity" class="rarity-badge">标准</span>
+              <h3 id="skinName">夜班信使</h3>
+              <p id="skinTagline">城市熄灯后，仍有人替你送达。</p>
+              <div class="price-progress"><span id="skinPriceText">已拥有</span><i><b id="skinPriceBar"></b></i></div>
+            </div>
+          </div>
+          <div id="skinGrid" class="skin-rail" aria-label="选择皮肤"></div>
           <p id="shopMessage" class="shop-message"></p>
-          <button id="closeSkinsButton" class="pixel-button" type="button">返回主菜单</button>
+          <div class="shop-actions">
+            <button id="skinActionButton" class="pixel-button primary" type="button">装备</button>
+            <button id="closeSkinsButton" class="pixel-button" type="button">返回</button>
+          </div>
         </section>
 
         <section id="gameOverPanel" class="panel game-over-panel" hidden>

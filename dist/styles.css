@@ -178,6 +178,7 @@ canvas {
 .pixel-button:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 #000; }
 .pixel-button:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 #000; }
 .pixel-button.primary { min-width: 190px; color: #07131b; border-color: var(--cyan); background: var(--cyan); }
+.pixel-button:disabled { cursor: default; opacity: .48; transform: none; box-shadow: 2px 2px 0 #000; }
 .icon-button { padding: 8px 10px; font-size: 10px; }
 
 .game-over-panel { align-items: center; text-align: center; background: rgba(5, 6, 17, .9); }
@@ -188,17 +189,38 @@ canvas {
 .result-grid strong { display: block; margin-top: 5px; color: var(--paper); font-size: 28px; }
 .record-message { min-height: 20px; margin: 0 0 18px; color: var(--amber); font-size: 12px; }
 .game-over-panel #menuButton { margin-top: 12px; }
-.skins-panel { align-items: stretch; justify-content: center; background: rgba(5, 6, 17, .96); }
-.shop-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-.shop-heading h2 { margin: 0; color: var(--pink); font-size: 28px; }
-.shop-heading span { color: var(--amber); font-size: 11px; }
-.skin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 20px 0 12px; }
-.skin-card { min-height: 112px; display: grid; justify-items: start; align-content: space-between; gap: 8px; padding: 12px; border: 1px solid #34415b; background: rgba(13,18,37,.94); color: var(--paper); cursor: pointer; }
-.skin-card.is-equipped { border-color: var(--cyan); box-shadow: inset 0 0 0 2px rgba(88,246,231,.18); }
-.skin-avatar { width: 28px; height: 38px; border: 4px solid var(--skin-accent); background: var(--skin-body); box-shadow: 4px 4px 0 #000; }
-.skin-card strong { font-size: 11px; }
-.skin-card small { color: var(--amber); font-size: 9px; }
-.shop-message { min-height: 20px; margin: 0 0 12px; color: var(--cyan); font-size: 10px; }
+.skins-panel { align-items: stretch; justify-content: center; padding: clamp(22px, 6vw, 38px); background: radial-gradient(circle at 78% 12%, rgba(255,79,163,.13), transparent 35%), rgba(5, 6, 17, .97); overflow: hidden; }
+.shop-heading { position: relative; z-index: 2; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.shop-heading .eyebrow { margin-bottom: 5px; }
+.shop-heading h2 { margin: 0; color: var(--paper); font: 1000 27px/1 "Microsoft YaHei UI", sans-serif; letter-spacing: -.04em; }
+.coin-chip { align-self: center; padding: 8px 10px; border: 1px solid rgba(255,208,90,.55); color: var(--amber); background: rgba(255,208,90,.08); font-size: 12px; box-shadow: 3px 3px 0 #000; }
+.skin-stage { --skin-body: #18203b; --skin-accent: #ff4fa3; position: relative; min-height: 250px; display: grid; grid-template-columns: 42% 58%; align-items: center; margin: 16px 0 12px; overflow: hidden; border: 1px solid rgba(88,246,231,.36); background: linear-gradient(135deg, rgba(15,20,46,.95), rgba(31,18,50,.93)); box-shadow: inset 0 0 40px rgba(88,246,231,.05), 5px 5px 0 #000; }
+.stage-grid { position: absolute; inset: 0; opacity: .16; background: linear-gradient(rgba(88,246,231,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(88,246,231,.35) 1px, transparent 1px); background-size: 26px 26px; transform: perspective(220px) rotateX(55deg) scale(1.5); transform-origin: bottom; }
+.skin-stage::after { content: "LOADOUT PREVIEW"; position: absolute; right: 12px; top: 10px; color: rgba(88,246,231,.35); font-size: 8px; letter-spacing: .16em; }
+.shop-avatar { position: relative; width: 72px; height: 118px; margin: 15px auto 0; filter: drop-shadow(0 0 16px var(--skin-accent)); animation: avatar-idle 1.5s steps(2) infinite; }
+.shop-avatar::before { content: ""; position: absolute; left: 20px; top: 0; width: 34px; height: 28px; border-top: 11px solid #13172c; background: #ffd7ba; box-shadow: -5px 6px 0 #13172c; }
+.shop-avatar::after { content: ""; position: absolute; left: 5px; bottom: 0; width: 64px; height: 8px; background: rgba(0,0,0,.45); }
+.shop-avatar i { position: absolute; left: 15px; top: 28px; width: 42px; height: 68px; border-left: 10px solid var(--skin-accent); background: var(--skin-body); box-shadow: 7px 5px 0 rgba(0,0,0,.55); }
+.shop-avatar b, .shop-avatar span { position: absolute; bottom: 11px; width: 17px; height: 25px; background: #050611; }
+.shop-avatar b { left: 15px; }
+.shop-avatar span { right: 15px; }
+.skin-detail { position: relative; z-index: 1; padding: 32px 20px 20px 4px; }
+.rarity-badge { display: inline-block; padding: 4px 7px; color: var(--skin-accent); border: 1px solid currentColor; font-size: 8px; letter-spacing: .16em; }
+.skin-detail h3 { margin: 12px 0 8px; color: var(--paper); font: 900 23px/1.1 "Microsoft YaHei UI", sans-serif; }
+.skin-detail p { min-height: 44px; margin: 0 0 18px; color: #a7b5c6; font-size: 10px; line-height: 1.7; }
+.price-progress { display: grid; gap: 7px; color: var(--amber); font-size: 9px; }
+.price-progress > i { height: 5px; overflow: hidden; background: #25314c; }
+.price-progress > i > b { display: block; width: 0; height: 100%; background: var(--skin-accent); transition: width .28s steps(5); }
+.skin-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.skin-card { position: relative; min-width: 0; display: grid; justify-items: center; gap: 7px; padding: 9px 4px; border: 1px solid #34415b; background: rgba(13,18,37,.94); color: var(--paper); cursor: pointer; }
+.skin-card.is-selected { border-color: var(--skin-accent); transform: translateY(-3px); box-shadow: 0 3px 0 var(--skin-accent); }
+.skin-card.is-equipped::after { content: "E"; position: absolute; top: 3px; right: 3px; width: 14px; height: 14px; display: grid; place-items: center; color: #07131b; background: var(--cyan); font: 700 8px monospace; }
+.skin-swatch { width: 25px; height: 30px; border: 4px solid var(--skin-accent); background: var(--skin-body); box-shadow: 3px 3px 0 #000; }
+.skin-card strong { max-width: 100%; overflow: hidden; color: #aebdcb; font-size: 8px; white-space: nowrap; text-overflow: ellipsis; }
+.shop-message { min-height: 16px; margin: 9px 0; color: var(--cyan); font-size: 9px; text-align: center; }
+.shop-actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.shop-actions .primary { width: 100%; }
+@keyframes avatar-idle { 50% { transform: translateY(-4px); } }
 
 .tutorial {
   position: absolute;

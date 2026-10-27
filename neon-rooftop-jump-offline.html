@@ -187,6 +187,7 @@ canvas {
 .pixel-button:hover { transform: translate(-1px, -1px); box-shadow: 5px 5px 0 #000; }
 .pixel-button:active { transform: translate(3px, 3px); box-shadow: 1px 1px 0 #000; }
 .pixel-button.primary { min-width: 190px; color: #07131b; border-color: var(--cyan); background: var(--cyan); }
+.pixel-button:disabled { cursor: default; opacity: .48; transform: none; box-shadow: 2px 2px 0 #000; }
 .icon-button { padding: 8px 10px; font-size: 10px; }
 
 .game-over-panel { align-items: center; text-align: center; background: rgba(5, 6, 17, .9); }
@@ -197,17 +198,38 @@ canvas {
 .result-grid strong { display: block; margin-top: 5px; color: var(--paper); font-size: 28px; }
 .record-message { min-height: 20px; margin: 0 0 18px; color: var(--amber); font-size: 12px; }
 .game-over-panel #menuButton { margin-top: 12px; }
-.skins-panel { align-items: stretch; justify-content: center; background: rgba(5, 6, 17, .96); }
-.shop-heading { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; }
-.shop-heading h2 { margin: 0; color: var(--pink); font-size: 28px; }
-.shop-heading span { color: var(--amber); font-size: 11px; }
-.skin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin: 20px 0 12px; }
-.skin-card { min-height: 112px; display: grid; justify-items: start; align-content: space-between; gap: 8px; padding: 12px; border: 1px solid #34415b; background: rgba(13,18,37,.94); color: var(--paper); cursor: pointer; }
-.skin-card.is-equipped { border-color: var(--cyan); box-shadow: inset 0 0 0 2px rgba(88,246,231,.18); }
-.skin-avatar { width: 28px; height: 38px; border: 4px solid var(--skin-accent); background: var(--skin-body); box-shadow: 4px 4px 0 #000; }
-.skin-card strong { font-size: 11px; }
-.skin-card small { color: var(--amber); font-size: 9px; }
-.shop-message { min-height: 20px; margin: 0 0 12px; color: var(--cyan); font-size: 10px; }
+.skins-panel { align-items: stretch; justify-content: center; padding: clamp(22px, 6vw, 38px); background: radial-gradient(circle at 78% 12%, rgba(255,79,163,.13), transparent 35%), rgba(5, 6, 17, .97); overflow: hidden; }
+.shop-heading { position: relative; z-index: 2; display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; }
+.shop-heading .eyebrow { margin-bottom: 5px; }
+.shop-heading h2 { margin: 0; color: var(--paper); font: 1000 27px/1 "Microsoft YaHei UI", sans-serif; letter-spacing: -.04em; }
+.coin-chip { align-self: center; padding: 8px 10px; border: 1px solid rgba(255,208,90,.55); color: var(--amber); background: rgba(255,208,90,.08); font-size: 12px; box-shadow: 3px 3px 0 #000; }
+.skin-stage { --skin-body: #18203b; --skin-accent: #ff4fa3; position: relative; min-height: 250px; display: grid; grid-template-columns: 42% 58%; align-items: center; margin: 16px 0 12px; overflow: hidden; border: 1px solid rgba(88,246,231,.36); background: linear-gradient(135deg, rgba(15,20,46,.95), rgba(31,18,50,.93)); box-shadow: inset 0 0 40px rgba(88,246,231,.05), 5px 5px 0 #000; }
+.stage-grid { position: absolute; inset: 0; opacity: .16; background: linear-gradient(rgba(88,246,231,.35) 1px, transparent 1px), linear-gradient(90deg, rgba(88,246,231,.35) 1px, transparent 1px); background-size: 26px 26px; transform: perspective(220px) rotateX(55deg) scale(1.5); transform-origin: bottom; }
+.skin-stage::after { content: "LOADOUT PREVIEW"; position: absolute; right: 12px; top: 10px; color: rgba(88,246,231,.35); font-size: 8px; letter-spacing: .16em; }
+.shop-avatar { position: relative; width: 72px; height: 118px; margin: 15px auto 0; filter: drop-shadow(0 0 16px var(--skin-accent)); animation: avatar-idle 1.5s steps(2) infinite; }
+.shop-avatar::before { content: ""; position: absolute; left: 20px; top: 0; width: 34px; height: 28px; border-top: 11px solid #13172c; background: #ffd7ba; box-shadow: -5px 6px 0 #13172c; }
+.shop-avatar::after { content: ""; position: absolute; left: 5px; bottom: 0; width: 64px; height: 8px; background: rgba(0,0,0,.45); }
+.shop-avatar i { position: absolute; left: 15px; top: 28px; width: 42px; height: 68px; border-left: 10px solid var(--skin-accent); background: var(--skin-body); box-shadow: 7px 5px 0 rgba(0,0,0,.55); }
+.shop-avatar b, .shop-avatar span { position: absolute; bottom: 11px; width: 17px; height: 25px; background: #050611; }
+.shop-avatar b { left: 15px; }
+.shop-avatar span { right: 15px; }
+.skin-detail { position: relative; z-index: 1; padding: 32px 20px 20px 4px; }
+.rarity-badge { display: inline-block; padding: 4px 7px; color: var(--skin-accent); border: 1px solid currentColor; font-size: 8px; letter-spacing: .16em; }
+.skin-detail h3 { margin: 12px 0 8px; color: var(--paper); font: 900 23px/1.1 "Microsoft YaHei UI", sans-serif; }
+.skin-detail p { min-height: 44px; margin: 0 0 18px; color: #a7b5c6; font-size: 10px; line-height: 1.7; }
+.price-progress { display: grid; gap: 7px; color: var(--amber); font-size: 9px; }
+.price-progress > i { height: 5px; overflow: hidden; background: #25314c; }
+.price-progress > i > b { display: block; width: 0; height: 100%; background: var(--skin-accent); transition: width .28s steps(5); }
+.skin-rail { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; }
+.skin-card { position: relative; min-width: 0; display: grid; justify-items: center; gap: 7px; padding: 9px 4px; border: 1px solid #34415b; background: rgba(13,18,37,.94); color: var(--paper); cursor: pointer; }
+.skin-card.is-selected { border-color: var(--skin-accent); transform: translateY(-3px); box-shadow: 0 3px 0 var(--skin-accent); }
+.skin-card.is-equipped::after { content: "E"; position: absolute; top: 3px; right: 3px; width: 14px; height: 14px; display: grid; place-items: center; color: #07131b; background: var(--cyan); font: 700 8px monospace; }
+.skin-swatch { width: 25px; height: 30px; border: 4px solid var(--skin-accent); background: var(--skin-body); box-shadow: 3px 3px 0 #000; }
+.skin-card strong { max-width: 100%; overflow: hidden; color: #aebdcb; font-size: 8px; white-space: nowrap; text-overflow: ellipsis; }
+.shop-message { min-height: 16px; margin: 9px 0; color: var(--cyan); font-size: 9px; text-align: center; }
+.shop-actions { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+.shop-actions .primary { width: 100%; }
+@keyframes avatar-idle { 50% { transform: translateY(-4px); } }
 
 .tutorial {
   position: absolute;
@@ -293,11 +315,26 @@ canvas {
         </section>
 
         <section id="skinsPanel" class="panel skins-panel" hidden>
-          <p class="eyebrow">COURIER LOADOUT</p>
-          <div class="shop-heading"><h2>皮肤仓库</h2><span>像素币 <strong id="shopCoinCount">0</strong></span></div>
-          <div id="skinGrid" class="skin-grid"></div>
+          <div class="shop-heading">
+            <div><p class="eyebrow">COURIER LOADOUT</p><h2>霓虹装备舱</h2></div>
+            <span class="coin-chip">◈ <strong id="shopCoinCount">0</strong></span>
+          </div>
+          <div id="skinStage" class="skin-stage">
+            <div class="stage-grid" aria-hidden="true"></div>
+            <div id="shopAvatar" class="shop-avatar" aria-hidden="true"><i></i><b></b><span></span></div>
+            <div class="skin-detail">
+              <span id="skinRarity" class="rarity-badge">标准</span>
+              <h3 id="skinName">夜班信使</h3>
+              <p id="skinTagline">城市熄灯后，仍有人替你送达。</p>
+              <div class="price-progress"><span id="skinPriceText">已拥有</span><i><b id="skinPriceBar"></b></i></div>
+            </div>
+          </div>
+          <div id="skinGrid" class="skin-rail" aria-label="选择皮肤"></div>
           <p id="shopMessage" class="shop-message"></p>
-          <button id="closeSkinsButton" class="pixel-button" type="button">返回主菜单</button>
+          <div class="shop-actions">
+            <button id="skinActionButton" class="pixel-button primary" type="button">装备</button>
+            <button id="closeSkinsButton" class="pixel-button" type="button">返回</button>
+          </div>
         </section>
 
         <section id="gameOverPanel" class="panel game-over-panel" hidden>
@@ -385,10 +422,10 @@ const TASKS = [
   { id: 'score15', label: '单局达到 15 分', field: 'bestScore', target: 15, reward: 80 },
 ];
 const SKINS = [
-  { id: 'courier', name: '夜班信使', price: 0, body: '#18203b', accent: '#ff4fa3' },
-  { id: 'magenta', name: '故障玫红', price: 120, body: '#4b265e', accent: '#ff4fa3' },
-  { id: 'gold', name: '黄金脉冲', price: 260, body: '#4a391b', accent: '#ffd05a' },
-  { id: 'cyan', name: '量子青蓝', price: 420, body: '#153f46', accent: '#58f6e7' },
+  { id: 'courier', name: '夜班信使', rarity: '标准', tagline: '城市熄灯后，仍有人替你送达。', price: 0, body: '#18203b', accent: '#ff4fa3' },
+  { id: 'magenta', name: '故障玫红', rarity: '稀有', tagline: '把系统故障穿在身上，拒绝被夜色隐藏。', price: 120, body: '#4b265e', accent: '#ff4fa3' },
+  { id: 'gold', name: '黄金脉冲', rarity: '史诗', tagline: '每次完美落地，都像一次高压放电。', price: 260, body: '#4a391b', accent: '#ffd05a' },
+  { id: 'cyan', name: '量子青蓝', rarity: '传说', tagline: '来自天际线尽头的实验型配送装甲。', price: 420, body: '#153f46', accent: '#58f6e7' },
 ];
 function dailyKey(date = new Date()) {
   return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
@@ -449,6 +486,14 @@ const ui = {
   skinsPanel: document.querySelector('#skinsPanel'),
   closeSkinsButton: document.querySelector('#closeSkinsButton'),
   skinGrid: document.querySelector('#skinGrid'),
+  skinStage: document.querySelector('#skinStage'),
+  shopAvatar: document.querySelector('#shopAvatar'),
+  skinRarity: document.querySelector('#skinRarity'),
+  skinName: document.querySelector('#skinName'),
+  skinTagline: document.querySelector('#skinTagline'),
+  skinPriceText: document.querySelector('#skinPriceText'),
+  skinPriceBar: document.querySelector('#skinPriceBar'),
+  skinActionButton: document.querySelector('#skinActionButton'),
   shopMessage: document.querySelector('#shopMessage'),
   coinCount: document.querySelector('#coinCount'),
   shopCoinCount: document.querySelector('#shopCoinCount'),
@@ -507,6 +552,7 @@ let fragileTimer = 0;
 let taskState = loadSave().taskState;
 let skinState = loadSave().skinState;
 let dailyCompleted = loadSave().dailyCompleted;
+let selectedSkinId = skinState.equipped;
 
 function loadSave() {
   const defaults = { best: 0, muted: false, played: false, dailyCompleted: '', taskState: createTaskState(), skinState: { coins: 0, unlocked: ['courier'], equipped: 'courier' } };
@@ -989,17 +1035,35 @@ function renderMetaUi() {
     const done = taskState.claimed.includes(task.id);
     return `<div class="task-row"><span>${done ? '✓ ' : ''}${task.label}</span><span>${value}/${task.target} · ${task.reward}币</span></div>`;
   }).join('');
+  const selected = SKINS.find((skin) => skin.id === selectedSkinId) || SKINS[0];
+  const selectedOwned = skinState.unlocked.includes(selected.id);
+  const selectedEquipped = skinState.equipped === selected.id;
+  ui.skinStage.style.setProperty('--skin-body', selected.body);
+  ui.skinStage.style.setProperty('--skin-accent', selected.accent);
+  ui.shopAvatar.style.setProperty('--skin-body', selected.body);
+  ui.shopAvatar.style.setProperty('--skin-accent', selected.accent);
+  ui.skinRarity.textContent = `${selected.rarity} / ${selectedOwned ? '已解锁' : '未解锁'}`;
+  ui.skinRarity.style.setProperty('--skin-accent', selected.accent);
+  ui.skinName.textContent = selected.name;
+  ui.skinTagline.textContent = selected.tagline;
+  ui.skinPriceText.textContent = selectedOwned ? (selectedEquipped ? '当前装备' : '已拥有') : `${skinState.coins} / ${selected.price} 像素币`;
+  ui.skinPriceBar.style.width = selectedOwned ? '100%' : `${Math.min(100, skinState.coins / selected.price * 100)}%`;
+  ui.skinPriceBar.style.background = selected.accent;
+  ui.skinActionButton.textContent = selectedEquipped ? '已装备' : selectedOwned ? '装备这套皮肤' : `解锁 · ${selected.price} 币`;
+  ui.skinActionButton.disabled = selectedEquipped;
   ui.skinGrid.innerHTML = SKINS.map((skin) => {
     const owned = skinState.unlocked.includes(skin.id);
     const equipped = skinState.equipped === skin.id;
-    return `<button class="skin-card${equipped ? ' is-equipped' : ''}" type="button" data-skin="${skin.id}"><span class="skin-avatar" style="--skin-body:${skin.body};--skin-accent:${skin.accent}"></span><strong>${skin.name}</strong><small>${equipped ? '使用中' : owned ? '点击装备' : `${skin.price} 像素币`}</small></button>`;
+    const selectedClass = selectedSkinId === skin.id ? ' is-selected' : '';
+    return `<button class="skin-card${equipped ? ' is-equipped' : ''}${selectedClass}" style="--skin-body:${skin.body};--skin-accent:${skin.accent}" type="button" data-skin="${skin.id}" aria-label="预览${skin.name}"><span class="skin-swatch"></span><strong>${skin.name}</strong></button>`;
   }).join('');
 }
 
 function openSkins() {
   ui.startPanel.hidden = true;
   ui.skinsPanel.hidden = false;
-  ui.shopMessage.textContent = '皮肤只改变外观，不影响跳跃属性。';
+  selectedSkinId = skinState.equipped;
+  ui.shopMessage.textContent = '选择一套装备，查看完整预览。';
   renderMetaUi();
 }
 
@@ -1052,10 +1116,16 @@ ui.closeSkinsButton.addEventListener('click', showMenu);
 ui.skinGrid.addEventListener('click', (event) => {
   const card = event.target.closest('[data-skin]');
   if (!card) return;
-  const result = purchaseSkin(skinState, card.dataset.skin);
+  selectedSkinId = card.dataset.skin;
+  ui.shopMessage.textContent = '预览已更新。确认后再解锁或装备。';
+  renderMetaUi();
+  tone(380, .035, 'square', .018);
+});
+ui.skinActionButton.addEventListener('click', () => {
+  const result = purchaseSkin(skinState, selectedSkinId);
   skinState = result.state;
   ui.shopMessage.textContent = result.ok
-    ? result.reason === 'purchased' ? '解锁成功，已自动装备。' : '皮肤已装备。'
+    ? result.reason === 'purchased' ? '解锁成功，已自动装备。现在去屋顶亮相吧。' : '装备完成，外观已即时生效。'
     : result.reason === 'coins' ? '像素币不足，完成任务或每日挑战可以获得。' : '皮肤不存在。';
   persist();
   renderMetaUi();
