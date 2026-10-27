@@ -32,4 +32,6 @@ test('skins use coins, unlock permanently, and equip', () => {
   assert.ok(bought.state.unlocked.includes('magenta'));
   assert.equal(purchaseSkin(bought.state, 'magenta').state.coins, 80);
   assert.equal(SKINS.length, 4);
+  assert.notEqual(SKINS[0].shape, SKINS[1].shape);
+  assert.notEqual(SKINS[0].accent, SKINS[1].accent);
 });

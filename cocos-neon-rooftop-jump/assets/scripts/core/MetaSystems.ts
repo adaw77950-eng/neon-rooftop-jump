@@ -18,6 +18,7 @@ export interface SkinDefinition {
   id: string;
   name: string;
   price: number;
+  shape: string;
   rarity: string;
   tagline: string;
   body: string;
@@ -31,10 +32,10 @@ export const TASKS = [
 ];
 
 export const SKINS: SkinDefinition[] = [
-  { id: 'courier', name: '夜班信使', rarity: '标准', tagline: '城市熄灯后，仍有人替你送达。', price: 0, body: '#18203b', accent: '#ff4fa3' },
-  { id: 'magenta', name: '故障玫红', rarity: '稀有', tagline: '把系统故障穿在身上，拒绝被夜色隐藏。', price: 120, body: '#4b265e', accent: '#ff4fa3' },
-  { id: 'gold', name: '黄金脉冲', rarity: '史诗', tagline: '每次完美落地，都像一次高压放电。', price: 260, body: '#4a391b', accent: '#ffd05a' },
-  { id: 'cyan', name: '量子青蓝', rarity: '传说', tagline: '来自天际线尽头的实验型配送装甲。', price: 420, body: '#153f46', accent: '#58f6e7' },
+  { id: 'courier', name: '数据邮差', shape: 'courier', rarity: '标准', tagline: '青色面罩扫描路线，背包负责守住最后一枚芯片。', price: 0, body: '#19304d', accent: '#58f6e7' },
+  { id: 'magenta', name: '故障浪人', shape: 'glitch', rarity: '稀有', tagline: '兜帽与残影披风，让追踪系统只看见一串坏像素。', price: 120, body: '#401947', accent: '#ff4fa3' },
+  { id: 'gold', name: '黄金脉冲', shape: 'armor', rarity: '史诗', tagline: '每次完美落地，都像一次高压放电。', price: 260, body: '#4a391b', accent: '#ffd05a' },
+  { id: 'cyan', name: '量子青蓝', shape: 'armor', rarity: '传说', tagline: '来自天际线尽头的实验型配送装甲。', price: 420, body: '#153f46', accent: '#58f6e7' },
 ];
 
 export function dailyKey(date = new Date()): string {

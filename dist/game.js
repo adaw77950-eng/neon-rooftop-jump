@@ -435,19 +435,24 @@ function drawPlayer() {
   ctx.fillStyle = 'rgba(0,0,0,.3)';
   ctx.fillRect(-13, 2, 26, 5);
   const skin = SKINS.find((item) => item.id === skinState.equipped) || SKINS[0];
-  ctx.fillStyle = skin.body;
-  ctx.fillRect(-8, -33 + squash, 16, 27 - squash);
-  ctx.fillStyle = skin.accent;
-  ctx.fillRect(-8, -28 + squash, 4, 17 - squash);
-  ctx.fillStyle = '#2c3f70';
-  ctx.fillRect(-10, -31 + squash, 4, 21 - squash);
-  ctx.fillStyle = '#ffd7ba';
-  ctx.fillRect(-7, -43 + squash, 14, 12);
-  ctx.fillStyle = '#13172c';
-  ctx.fillRect(-8, -46 + squash, 16, 6);
-  ctx.fillRect(-9, -42 + squash, 4, 8);
-  ctx.fillStyle = colors.cyan;
-  ctx.fillRect(2, -39 + squash, 4, 3);
+  if (skin.shape === 'courier') {
+    ctx.fillStyle = skin.body; ctx.fillRect(-9, -31 + squash, 18, 25 - squash);
+    ctx.fillStyle = '#0b1425'; ctx.fillRect(7, -27 + squash, 7, 17 - squash);
+    ctx.fillStyle = '#13172c'; ctx.fillRect(-9, -47 + squash, 18, 15);
+    ctx.fillStyle = skin.accent; ctx.fillRect(-7, -40 + squash, 14, 5); ctx.fillRect(9, -25 + squash, 5, 11);
+  } else if (skin.shape === 'glitch') {
+    ctx.fillStyle = skin.body; ctx.fillRect(-12, -34 + squash, 24, 28 - squash); ctx.fillRect(7, -20 + squash, 9, 17 - squash);
+    ctx.fillStyle = skin.accent; ctx.fillRect(-12, -31 + squash, 5, 19 - squash); ctx.fillRect(12, -23 + squash, 5, 4); ctx.fillRect(-16, -13 + squash, 5, 4);
+    ctx.fillStyle = '#140b1c'; ctx.fillRect(-11, -48 + squash, 22, 16); ctx.fillRect(-14, -43 + squash, 5, 10);
+    ctx.fillStyle = skin.accent; ctx.fillRect(-7, -41 + squash, 14, 4);
+  } else {
+    ctx.fillStyle = skin.body; ctx.fillRect(-8, -33 + squash, 16, 27 - squash);
+    ctx.fillStyle = skin.accent; ctx.fillRect(-8, -28 + squash, 4, 17 - squash);
+    ctx.fillStyle = '#2c3f70'; ctx.fillRect(-10, -31 + squash, 4, 21 - squash);
+    ctx.fillStyle = '#ffd7ba'; ctx.fillRect(-7, -43 + squash, 14, 12);
+    ctx.fillStyle = '#13172c'; ctx.fillRect(-8, -46 + squash, 16, 6); ctx.fillRect(-9, -42 + squash, 4, 8);
+    ctx.fillStyle = skin.accent; ctx.fillRect(2, -39 + squash, 4, 3);
+  }
   ctx.fillStyle = '#050611';
   ctx.fillRect(-7, -7, 6, 7);
   ctx.fillRect(2, -7, 6, 7);
@@ -575,6 +580,7 @@ function renderMetaUi() {
   const selectedEquipped = skinState.equipped === selected.id;
   ui.skinStage.style.setProperty('--skin-body', selected.body);
   ui.skinStage.style.setProperty('--skin-accent', selected.accent);
+  ui.shopAvatar.dataset.shape = selected.shape || 'armor';
   ui.shopAvatar.style.setProperty('--skin-body', selected.body);
   ui.shopAvatar.style.setProperty('--skin-accent', selected.accent);
   ui.skinRarity.textContent = `${selected.rarity} / ${selectedOwned ? '已解锁' : '未解锁'}`;
@@ -590,7 +596,7 @@ function renderMetaUi() {
     const owned = skinState.unlocked.includes(skin.id);
     const equipped = skinState.equipped === skin.id;
     const selectedClass = selectedSkinId === skin.id ? ' is-selected' : '';
-    return `<button class="skin-card${equipped ? ' is-equipped' : ''}${selectedClass}" style="--skin-body:${skin.body};--skin-accent:${skin.accent}" type="button" data-skin="${skin.id}" aria-label="预览${skin.name}"><span class="skin-swatch"></span><strong>${skin.name}</strong></button>`;
+    return `<button class="skin-card${equipped ? ' is-equipped' : ''}${selectedClass}" style="--skin-body:${skin.body};--skin-accent:${skin.accent}" type="button" data-skin="${skin.id}" aria-label="预览${skin.name}"><span class="skin-swatch skin-swatch--${skin.shape || 'armor'}"></span><strong>${skin.name}</strong></button>`;
   }).join('');
 }
 
