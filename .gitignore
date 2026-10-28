@@ -1,0 +1,16 @@
+# Dependencies and generated caches
+node_modules/
+.cache/
+temp/
+library/
+local/
+
+# Local tools and sensitive browser artifacts
+tools/
+release/chrome-history/
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+*.log
+
